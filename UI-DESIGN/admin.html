@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enigma Home Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --primary-blue: #2261dd;
+      --primary-white: #ffffff;
+      --primary-black: #181818;
+      --sidebar-bg: #222d32;
+      --sidebar-active: #1e282c;
+      --sidebar-link: #b8c7ce;
+      --sidebar-link-active: #fff;
+      --gray: #f4f6f9;
+      --border: #e3e8f0;
+      --shadow: 0 2px 8px rgba(34,97,221,0.10);
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--gray);
+      margin: 0;
+      padding: 0;
+      color: var(--primary-black);
+      min-height: 100vh;
+    }
+    .wrapper {
+      display: flex;
+      min-height: 100vh;
+      background: var(--gray);
+    }
+    /* Sidebar */
+    .main-sidebar {
+      width: 250px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-link);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 20;
+      height: 100vh;
+      box-shadow: 2px 0 12px rgba(34,97,221,0.04);
+    }
+    .brand-link {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 1.2rem 1.5rem;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: var(--primary-blue);
+      background: var(--sidebar-active);
+      letter-spacing: 1px;
+      text-decoration: none;
+    }
+    .sidebar {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 0.5rem 0.5rem 0.5rem;
+    }
+    .user-panel {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding: 0.7rem 1rem;
+      background: var(--sidebar-active);
+      border-radius: 8px;
+    }
+    .user-panel img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary-blue);
+    }
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      color: var(--sidebar-link-active);
+    }
+    .user-info span {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .user-info small {
+      color: #b8c7ce;
+      font-size: 0.92rem;
+    }
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .sidebar-menu li a {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      color: var(--sidebar-link);
+      text-decoration: none;
+      font-size: 1.08rem;
+      padding: 0.7rem 1.2rem;
+      border-radius: 6px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .sidebar-menu li a.active, .sidebar-menu li a:hover {
+      background: var(--primary-blue);
+      color: var(--sidebar-link-active);
+    }
+    .sidebar-menu li a i {
+      font-size: 1.2rem;
+    }
+    /* Main content */
+    .main-content {
+      margin-left: 250px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--gray);
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 2rem 1.2rem 2rem;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(34,97,221,0.04);
+    }
+    .topbar .search-box {
+      background: var(--gray);
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      border: 1px solid var(--border);
+    }
+    .topbar .search-box input {
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      background: transparent;
+      color: var(--primary-black);
+      width: 180px;
+    }
+    .topbar .profile-dropdown {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      cursor: pointer;
+    }
+    .topbar .profile-dropdown img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary-blue);
+    }
+    .topbar .profile-dropdown .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 48px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      min-width: 180px;
+      z-index: 100;
+      padding: 0.5rem 0;
+    }
+    .topbar .profile-dropdown.open .dropdown-menu {
+      display: block;
+    }
+    .topbar .profile-dropdown .dropdown-menu a {
+      display: block;
+      padding: 0.7rem 1.2rem;
+      color: var(--primary-black);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+    .topbar .profile-dropdown .dropdown-menu a:hover {
+      background: var(--gray);
+    }
+    .dashboard-content {
+      display: flex;
+      gap: 2rem;
+      padding: 2rem;
+      flex: 1;
+      min-height: 0;
+    }
+    .dashboard-widgets {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      min-width: 320px;
+      max-width: 420px;
+    }
+    .widget-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 1.2rem 1.2rem 1.2rem 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .widget-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--primary-blue);
+      margin-bottom: 0.7rem;
+    }
+    .profile-settings, .helpdesk-settings {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 1.2rem 1.2rem 1.2rem 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .profile-settings h3, .helpdesk-settings h3 {
+      color: var(--primary-blue);
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+    .profile-settings label, .helpdesk-settings label {
+      font-weight: 500;
+      margin-bottom: 0.3rem;
+      display: block;
+    }
+    .profile-settings input[type="file"] {
+      margin-bottom: 1rem;
+    }
+    .profile-settings input, .profile-settings button, .helpdesk-settings input, .helpdesk-settings button {
+      border: 1.5px solid var(--primary-blue);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      font-size: 1rem;
+      margin-bottom: 0.7rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .profile-settings button, .helpdesk-settings button {
+      background: var(--primary-blue);
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 0;
+      transition: background 0.2s;
+    }
+    .profile-settings button:hover, .helpdesk-settings button:hover {
+      background: var(--primary-black);
+      color: var(--primary-blue);
+    }
+    .main-panel {
+      flex: 2;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 2rem 2rem 2rem 2rem;
+      display: flex;
+      flex-direction: column;
+      min-width: 340px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: 0;
+      height: fit-content;
+    }
+    .main-panel h2 {
+      color: var(--primary-blue);
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-bottom: 1.2rem;
+    }
+    .admin-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+    .form-section {
+      background: rgba(34,97,221,0.03);
+      padding: 1.2rem 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(34,97,221,0.1);
+      margin-bottom: 1rem;
+    }
+    .form-section h3 {
+      color: var(--primary-blue);
+      margin: 0 0 1rem 0;
+      font-size: 1.1rem;
+    }
+    .form-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .admin-form label {
+      font-weight: 600;
+      color: var(--primary-black);
+      margin-bottom: 0.3rem;
+      font-size: 0.95rem;
+    }
+    .admin-form input,
+    .admin-form select,
+    .admin-form textarea {
+      border: 2.5px solid var(--primary-blue);
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      outline: none;
+      background: var(--primary-white);
+      color: var(--primary-black);
+      box-shadow: 0 2px 8px rgba(34,97,221,0.08);
+      font-weight: 500;
+      transition: border 0.2s, box-shadow 0.2s;
+      resize: none;
+    }
+    .admin-form input:focus,
+    .admin-form select:focus,
+    .admin-form textarea:focus {
+      border-color: var(--primary-black);
+      box-shadow: 0 4px 16px rgba(34,97,221,0.15);
+    }
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .checkbox-item input[type="checkbox"] {
+      width: 1.2rem;
+      height: 1.2rem;
+      border: 2px solid var(--primary-blue);
+    }
+    .image-upload {
+      border: 2px dashed var(--primary-blue);
+      padding: 1.2rem;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .image-upload:hover {
+      background: rgba(34,97,221,0.05);
+    }
+    .admin-form button {
+      background: var(--primary-blue);
+      color: var(--primary-white);
+      border: none;
+      border-radius: 10px;
+      padding: 1rem 2rem;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(34,97,221,0.10);
+      transition: background 0.5s cubic-bezier(0.4,0,0.2,1), color 0.5s cubic-bezier(0.4,0,0.2,1), box-shadow 0.5s cubic-bezier(0.4,0,0.2,1);
+      margin-top: 1rem;
+    }
+    .admin-form button:hover {
+      background: var(--primary-black);
+      color: var(--primary-blue);
+      box-shadow: 0 4px 16px rgba(24,24,24,0.12);
+    }
+    .status-toggle {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .status-toggle label {
+      margin: 0;
+    }
+    @media (max-width: 1200px) {
+      .dashboard-content {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .dashboard-widgets, .main-panel {
+        max-width: 100%;
+        min-width: 0;
+      }
+      .main-panel {
+        margin-left: 0;
+      }
+    }
+    @media (max-width: 900px) {
+      .main-sidebar {
+        display: none;
+      }
+      .main-content {
+        margin-left: 0;
+      }
+      .topbar, .dashboard-content {
+        padding: 1rem 0.5rem;
+      }
+    }
+    .house-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: box-shadow 0.3s, transform 0.3s;
+      border: 2px solid transparent;
+    }
+    .house-card:hover {
+      box-shadow: 0 8px 32px rgba(34,97,221,0.18);
+      transform: translateY(-6px) scale(1.03);
+      border: 2px solid var(--primary-blue);
+    }
+    .house-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .house-info {
+      padding: 1.2rem 1rem 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .house-info h3 {
+      font-size: 1.15rem;
+      font-weight: bold;
+      color: var(--primary-blue);
+      margin: 0 0 0.2rem 0;
+    }
+    .house-price {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--primary-black);
+      margin-bottom: 0.2rem;
+    }
+    .house-meta {
+      font-size: 0.98rem;
+      color: #888;
+      margin-bottom: 0.2rem;
+    }
+    .house-info p {
+      font-size: 1rem;
+      color: #444;
+      margin: 0 0 0.5rem 0;
+    }
+    .house-admin-actions {
+      display: flex;
+      gap: 0.7rem;
+      margin-top: 0.5rem;
+    }
+    .edit-btn, .delete-btn {
+      background: var(--primary-blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1.2rem;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(34,97,221,0.10);
+      transition: background 0.2s;
+    }
+    .edit-btn:hover {
+      background: #181818;
+      color: var(--primary-blue);
+    }
+    .delete-btn {
+      background: #e74c3c;
+    }
+    .delete-btn:hover {
+      background: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <!-- Sidebar -->
+    <aside class="main-sidebar">
+      <a href="#" class="brand-link"><i class="fa-solid fa-house"></i> Enigma Admin</a>
+      <div class="sidebar">
+        <div class="user-panel">
+          <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Admin" />
+          <div class="user-info">
+            <span>Admin User</span>
+            <small>admin@enigmahome.com</small>
+          </div>
+        </div>
+        <ul class="sidebar-menu">
+          <li><a href="#" class="active"><i class="fa-solid fa-list"></i> Listings</a></li>
+          <li><a href="#"><i class="fa-solid fa-plus"></i> Add Listing</a></li>
+          <li><a href="#"><i class="fa-solid fa-user"></i> Profile</a></li>
+          <li><a href="#"><i class="fa-solid fa-headset"></i> Help Desk</a></li>
+          <li><a href="#"><i class="fa-solid fa-gear"></i> Settings</a></li>
+        </ul>
+      </div>
+    </aside>
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="topbar">
+        <div style="font-size:1.3rem;font-weight:600;color:var(--primary-blue);">Dashboard</div>
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Search property..." />
+        </div>
+        <div class="profile-dropdown" onclick="this.classList.toggle('open')">
+          <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Admin" />
+          <i class="fa-solid fa-caret-down"></i>
+          <div class="dropdown-menu">
+            <a href="#">Profile</a>
+            <a href="#">Change Password</a>
+            <a href="#">Logout</a>
+          </div>
+        </div>
+      </div>
+      <div class="dashboard-content">
+        <!-- Listings Grid -->
+        <div class="dashboard-listings" style="flex:2;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:2rem;">
+          <!-- Example House Card (repeat for each listing) -->
+          <div class="house-card">
+            <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=400&q=80" alt="Bedsitter" />
+            <div class="house-info">
+              <h3>Bedsitter - Lurambi, Near MMUST Gate</h3>
+              <div class="house-price">KES 4,000 / month</div>
+              <div class="house-meta">Lurambi &bull; Female Only &bull; Bedsitter</div>
+              <p>Spacious bedsitter, tiled floors, Wi-Fi, secure area, water included, 10 min walk to campus. Female only.</p>
+              <div class="house-admin-actions">
+                <button class="edit-btn"><i class="fa fa-edit"></i> Edit</button>
+                <button class="delete-btn"><i class="fa fa-trash"></i> Delete</button>
+              </div>
+            </div>
+          </div>
+          <div class="house-card">
+            <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80" alt="Single Room" />
+            <div class="house-info">
+              <h3>Single Room - Kakamega Bypass</h3>
+              <div class="house-price">KES 3,000 / month</div>
+              <div class="house-meta">Kakamega &bull; Male Only &bull; Single Room</div>
+              <p>Bright single room, painted walls, shared token, water separated, 15 min to campus, male only, affordable.</p>
+              <div class="house-admin-actions">
+                <button class="edit-btn"><i class="fa fa-edit"></i> Edit</button>
+                <button class="delete-btn"><i class="fa fa-trash"></i> Delete</button>
+              </div>
+            </div>
+          </div>
+          <div class="house-card">
+            <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80" alt="Two Bedroom" />
+            <div class="house-info">
+              <h3>Two Bedroom - Near MMUST, Pay Per Semester</h3>
+              <div class="house-price">KES 20,000 / semester</div>
+              <div class="house-meta">MMUST &bull; Flexible &bull; Two Bedroom</div>
+              <p>Modern two-bedroom, share with a friend, Wi-Fi, water included, 5 min walk to campus, secure, flexible payment.</p>
+              <div class="house-admin-actions">
+                <button class="edit-btn"><i class="fa fa-edit"></i> Edit</button>
+                <button class="delete-btn"><i class="fa fa-trash"></i> Delete</button>
+              </div>
+            </div>
+          </div>
+          <!-- Add more house cards as needed -->
+        </div>
+        <!-- End Listings Grid -->
+        <div class="dashboard-widgets">
+          <div class="widget-card">
+            <div class="widget-title">Quick Stats</div>
+            <div>Total Listings: <b>12</b></div>
+            <div>Active Agents: <b>3</b></div>
+            <div>Pending Inquiries: <b>5</b></div>
+          </div>
+          <div class="profile-settings">
+            <h3>Profile Settings</h3>
+            <label for="profile-pic">Profile Picture</label>
+            <input type="file" id="profile-pic" name="profile-pic" />
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" value="Admin User" />
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" value="admin@enigmahome.com" />
+            <button type="button">Update Profile</button>
+            <label for="password">Change Password</label>
+            <input type="password" id="password" name="password" placeholder="New Password" />
+            <button type="button">Change Password</button>
+          </div>
+          <div class="helpdesk-settings">
+            <h3>Help Desk Info</h3>
+            <label for="help-email">Help Email</label>
+            <input type="email" id="help-email" name="help-email" value="help@enigmahome.com" />
+            <label for="help-phone">Help Phone</label>
+            <input type="text" id="help-phone" name="help-phone" value="+254 712 345 678" />
+            <button type="button">Update Help Desk</button>
+          </div>
+        </div>
+        <!-- Main Panel (Listings/Form) -->
+        <div class="main-panel">
+          <h2>Edit Listing</h2>
+          <form class="admin-form">
+            <!-- Basic Information Section -->
+            <div class="form-section">
+              <h3>Basic Information</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="title">Title*</label>
+                  <input type="text" id="title" name="title" placeholder="e.g. Bedsitter - Lurambi, Near MMUST Gate" required />
+                </div>
+                <div class="form-group">
+                  <label for="nickname">Area Nickname/Tags</label>
+                  <input type="text" id="nickname" name="nickname" placeholder="e.g. Student Zone, Campus Area" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="roomType">Room Type*</label>
+                  <select id="roomType" name="roomType" required>
+                    <option value="">Select Room Type</option>
+                    <option value="Bedsitter">Bedsitter</option>
+                    <option value="Single Room">Single Room</option>
+                    <option value="Two Bedroom">Two Bedroom</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="location">Location*</label>
+                  <input type="text" id="location" name="location" placeholder="e.g. Lurambi, Near MMUST Gate" required />
+                </div>
+              </div>
+            </div>
+            <!-- Pricing Section -->
+            <div class="form-section">
+              <h3>Pricing Details</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="price">Price*</label>
+                  <input type="number" id="price" name="price" placeholder="e.g. 4000" required />
+                </div>
+                <div class="form-group">
+                  <label for="paymentFrequency">Payment Frequency*</label>
+                  <select id="paymentFrequency" name="paymentFrequency" required>
+                    <option value="">Select Payment Frequency</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="Semester">Per Semester</option>
+                    <option value="Flexible">Flexible</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <!-- Features & Amenities -->
+            <div class="form-section">
+              <h3>Features & Amenities</h3>
+              <div class="checkbox-group">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="wifi" name="amenities[]" value="wifi">
+                  <label for="wifi">Wi-Fi</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="water" name="amenities[]" value="water">
+                  <label for="water">Water Included</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="security" name="amenities[]" value="security">
+                  <label for="security">Security</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="tiled" name="amenities[]" value="tiled">
+                  <label for="tiled">Tiled Floors</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="token" name="amenities[]" value="token">
+                  <label for="token">Token Meter</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="painted" name="amenities[]" value="painted">
+                  <label for="painted">Freshly Painted</label>
+                </div>
+              </div>
+            </div>
+            <!-- Description & Details -->
+            <div class="form-section">
+              <h3>Description & Details</h3>
+              <div class="form-group">
+                <label for="description">Full Description*</label>
+                <textarea id="description" name="description" rows="4" placeholder="Describe the house, amenities, distance to campus, etc." required></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="gender">Gender Restriction</label>
+                  <select id="gender" name="gender">
+                    <option value="any">Any Gender</option>
+                    <option value="female">Female Only</option>
+                    <option value="male">Male Only</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="walkTime">Walk Time to Campus (minutes)</label>
+                  <input type="number" id="walkTime" name="walkTime" placeholder="e.g. 10" />
+                </div>
+              </div>
+            </div>
+            <!-- Images -->
+            <div class="form-section">
+              <h3>Images</h3>
+              <div class="image-upload">
+                <input type="file" id="images" name="images" multiple accept="image/*" style="display: none;" />
+                <label for="images">
+                  Click to upload images or drag and drop here<br>
+                  <small>(You can select multiple images)</small>
+                </label>
+              </div>
+            </div>
+            <!-- Agent Contact Information -->
+            <div class="form-section">
+              <h3>Agent Contact Information</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="agentPhone">Agent Phone*</label>
+                  <input type="tel" id="agentPhone" name="agentPhone" placeholder="e.g. +254712345678" required />
+                </div>
+                <div class="form-group">
+                  <label for="agentEmail">Agent Email*</label>
+                  <input type="email" id="agentEmail" name="agentEmail" placeholder="e.g. info@enigmahome.com" required />
+                </div>
+              </div>
+            </div>
+            <!-- Listing Status -->
+            <div class="form-section">
+              <h3>Listing Status</h3>
+              <div class="status-toggle">
+                <input type="checkbox" id="isAvailable" name="isAvailable" checked>
+                <label for="isAvailable">Mark as Available</label>
+              </div>
+            </div>
+            <button type="submit">Update Listing</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Simple dropdown for profile
+    document.querySelectorAll('.profile-dropdown').forEach(function(drop) {
+      drop.addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.querySelectorAll('.profile-dropdown').forEach(d => d.classList.remove('open'));
+        drop.classList.toggle('open');
+      });
+    });
+    document.body.addEventListener('click', function() {
+      document.querySelectorAll('.profile-dropdown').forEach(d => d.classList.remove('open'));
+    });
+  </script>
+</body>
+</html>

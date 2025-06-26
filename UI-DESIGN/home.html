@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enigma Home - Student Housing Finder</title>
+  <style>
+    :root {
+      --primary-blue: #2261dd;
+      --primary-white: #ffffff;
+      --primary-black: #181818;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--primary-white);
+      margin: 0;
+      padding: 0;
+      color: var(--primary-black);
+      min-height: 100vh;
+      background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+    .navbar {
+      background: var(--primary-white);
+      color: var(--primary-blue);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(34,97,221,0.08);
+    }
+    .navbar .brand {
+      font-weight: bold;
+      font-size: 1.3rem;
+      letter-spacing: 1px;
+      color: var(--primary-blue);
+    }
+    .navbar ul {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+      margin: 0;
+      padding: 0;
+    }
+    .navbar ul li a {
+      color: var(--primary-black);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .navbar ul li a.active, .navbar ul li a:hover {
+      color: var(--primary-blue);
+    }
+    .navbar .actions a {
+      margin-left: 1rem;
+      padding: 0.5rem 1.2rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.2s, color 0.2s;
+    }
+    .navbar .actions .signin {
+      color: var(--primary-blue);
+      background: transparent;
+    }
+    .navbar .actions .signup {
+      background: var(--primary-blue);
+      color: var(--primary-white);
+      box-shadow: 0 2px 8px rgba(34,97,221,0.10);
+    }
+    .hero {
+      position: relative;
+      height: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 70px;
+      background: var(--primary-blue);
+      overflow: hidden;
+      width: 100vw;
+      max-width: 100vw;
+    }
+    .hero img {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.45;
+      z-index: 1;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(90deg, rgba(24,24,24,0.55) 40%, rgba(34,97,221,0.45) 100%);
+      z-index: 2;
+      transition: background 0.6s cubic-bezier(0.4,0,0.2,1);
+    }
+    .hero-content {
+      position: relative;
+      z-index: 3;
+      text-align: center;
+      color: var(--primary-white);
+      max-width: 650px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-content h1 {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 12px rgba(24,24,24,0.18);
+      color: var(--primary-white);
+    }
+    .hero-content p {
+      font-size: 1.15rem;
+      margin-bottom: 2rem;
+      color: #e6e6e6;
+      font-weight: 500;
+      text-shadow: 0 2px 8px rgba(24,24,24,0.10);
+    }
+    .search-section {
+      position: relative;
+      z-index: 3;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
+      padding: 40px 0;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+    }
+    .search-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transform: translateY(0);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .search-container:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+    .search-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.8rem;
+      justify-content: center;
+    }
+    .input-group {
+      position: relative;
+      min-width: 280px;
+      flex: 1;
+    }
+    .input-group input,
+    .input-group select {
+      width: 100%;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #ffffff;
+      padding: 24px 16px 8px;
+      font-size: 16px;
+      line-height: 1;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .input-group input:hover,
+    .input-group select:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    .input-group label {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.85);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .input-group input:focus,
+    .input-group select:focus,
+    .input-group input:not(:placeholder-shown),
+    .input-group select:not(:placeholder-shown) {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.4);
+      outline: none;
+      padding-top: 24px;
+      padding-bottom: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .input-group input:focus + label,
+    .input-group select:focus + label,
+    .input-group input:not(:placeholder-shown) + label,
+    .input-group select:not(:placeholder-shown) + label {
+      top: 8px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .input-group select {
+      appearance: none;
+      background: rgba(51, 51, 51, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #ffffff;
+      padding: 24px 16px 8px;
+      font-size: 16px;
+      width: 100%;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      background-size: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .input-group select option {
+      background: #333333;
+      color: rgba(255, 255, 255, 0.9);
+      padding: 16px;
+      font-size: 14px;
+    }
+    .input-group select:focus {
+      background: rgba(71, 71, 71, 0.9);
+      border-color: rgba(255, 255, 255, 0.4);
+      outline: none;
+    }
+    .input-group select:hover {
+      background: rgba(71, 71, 71, 0.9);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    .input-group select:focus + label,
+    .input-group select:not(:placeholder-shown) + label {
+      top: 8px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .search-button {
+      width: 100%;
+      height: 60px;
+      background: rgba(229, 9, 20, 0.9);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      min-width: 280px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transform: translateZ(0);
+      perspective: 1000px;
+    }
+    .search-button:hover {
+      background: rgba(229, 9, 20, 1);
+      transform: translateY(-2px) translateZ(20px);
+      box-shadow: 0 8px 24px rgba(229, 9, 20, 0.3);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    @media (max-width: 900px) {
+      .search-container {
+        padding: 2rem;
+      }
+      
+      .input-group {
+        min-width: 100%;
+      }
+      
+      .search-button {
+        min-width: 100%;
+      }
+    }
+    @media (max-width: 600px) {
+      .search-container {
+        padding: 1.5rem;
+      }
+      
+      .search-form {
+        gap: 1rem;
+      }
+    }
+    /* Category Section */
+    .category-section {
+      height: 300px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
+      padding: 0 10px;
+      overflow: hidden;
+    }
+
+    .listings-section {
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
+      padding: 80px 10px;
+      overflow: hidden;
+    }
+
+    .category-section::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(90deg, rgba(24,24,24,0.75) 0%, rgba(34,97,221,0.65) 100%);
+      z-index: 1;
+    }
+
+    .category-title {
+      font-size: 2.5rem;
+      color: white;
+      margin-bottom: 40px;
+      text-align: center;
+      font-weight: bold;
+      position: relative;
+      z-index: 2;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3),
+                   0 4px 12px rgba(0,0,0,0.1),
+                   0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .category-cards,
+    .house-listings {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      width: 100%;
+      max-width: none;
+      margin: 0 auto;
+    }
+
+    .house-card {
+      background: #FFFFFF;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .house-card:hover {
+      transform: translateY(-15px) scale(1.03);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .house-card img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .house-card:hover img {
+      transform: scale(1.08);
+    }
+
+    .house-info {
+      padding: 32px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .house-info h3 {
+      font-size: 1.3em;
+      margin: 0 0 10px 0;
+      color: var(--primary-black);
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .house-price {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: var(--primary-blue);
+      margin-bottom: 15px;
+      text-shadow: 1px 1px 2px rgba(34,97,221,0.1);
+    }
+
+    .house-info p {
+      font-size: 0.95em;
+      line-height: 1.5;
+      color: #666;
+      margin: 0;
+      flex: 1;
+    }
+
+    .agent-contact-group {
+      padding: 24px 32px;
+      background: #f8f9fa;
+      border-top: 1px solid #eee;
+    }
+
+    .agent-btn {
+      padding: 8px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.9em;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .agent-btn.whatsapp {
+      background-color: #25D366;
+      color: white;
+    }
+
+    .agent-btn.email {
+      background-color: #EA4335;
+      color: white;
+    }
+
+    .agent-btn.sms {
+      background-color: #4285F4;
+      color: white;
+    }
+
+    .agent-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    @media (max-width: 900px) {
+      .house-listings {
+        grid-template-columns: 1fr !important;
+        gap: 20px;
+      }
+      .category-cards {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+    }
+
+    .footer {
+      background: #222;
+      color: #fff;
+      padding: 2.5rem 1rem 1.2rem 1rem;
+      margin-top: 3rem;
+    }
+    .footer-content {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      justify-content: space-between;
+    }
+    .footer-section {
+      flex: 1 1 220px;
+      min-width: 200px;
+      margin-bottom: 1.5rem;
+    }
+    .footer-section h4 {
+      color: var(--primary-blue);
+      margin-bottom: 0.7rem;
+      font-size: 1.1rem;
+    }
+    .footer-section ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .footer-section ul li {
+      margin-bottom: 0.4rem;
+    }
+    .footer-section ul li a {
+      color: #fff;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-section ul li a:hover {
+      color: var(--primary-blue);
+    }
+    .footer-section a {
+      color: var(--primary-blue);
+      text-decoration: underline;
+    }
+    .footer-section a:hover {
+      color: #fff;
+    }
+    /* Scroll Animation */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .house-card {
+      opacity: 0;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .house-card:nth-child(1) { animation-delay: 0.1s; }
+    .house-card:nth-child(2) { animation-delay: 0.2s; }
+    .house-card:nth-child(3) { animation-delay: 0.3s; }
+    .house-card:nth-child(4) { animation-delay: 0.4s; }
+
+    .house-listings section {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .hero-section {
+      position: relative;
+      padding: 80px 20px;
+      text-align: center;
+      color: white;
+      background-image: url('https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom,
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.6) 100%
+      );
+      z-index: 1;
+    }
+
+    .hero-section > * {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-title {
+      font-size: 4.2em;
+      font-weight: 800;
+      margin-bottom: 20px;
+      line-height: 1.2;
+      text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2),
+                   4px 4px 0 rgba(0, 0, 0, 0.1);
+      transform: translateZ(0);
+      letter-spacing: -0.02em;
+    }
+
+    .hero-subtitle {
+      font-size: 2.8em;
+      margin-bottom: 30px;
+      font-weight: 700;
+      text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2),
+                   3px 3px 0 rgba(0, 0, 0, 0.1);
+      transform: translateZ(0);
+    }
+
+    .hero-description {
+      font-size: 1.4em;
+      max-width: 800px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .find-room-btn {
+      grid-column: 1 / -1;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      padding: 18px 40px;
+      border-radius: 10px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .find-room-btn:hover {
+      background: #1557b0;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .agent-contact-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .agent-btn {
+      padding: 8px 15px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.9em;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .agent-btn.whatsapp {
+      background-color: #25D366;
+      color: white;
+    }
+
+    .agent-btn.email {
+      background-color: #EA4335;
+      color: white;
+    }
+
+    .agent-btn.sms {
+      background-color: #4285F4;
+      color: white;
+    }
+
+    .agent-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 2.8em;
+      }
+      
+      .hero-subtitle {
+        font-size: 2em;
+      }
+      
+      .hero-description {
+        font-size: 1.2em;
+        padding: 0 20px;
+      }
+      
+      .search-container {
+        grid-template-columns: 1fr;
+        padding: 22px;
+        width: 88%;
+      }
+
+      .agent-contact-group {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+    }
+
+    .house-card {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.5s ease;
+    }
+
+    .house-card.animate {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .house-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .category-title {
+      font-size: 2em;
+      color: #1a73e8;
+      margin: 40px 0;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .listings-title {
+      font-size: 2.5rem;
+      color: var(--primary-white);
+      margin-bottom: 40px;
+      text-align: center;
+      font-weight: bold;
+      position: relative;
+      z-index: 2;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3),
+                   0 4px 12px rgba(0,0,0,0.1),
+                   0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .category-card {
+      background: #FFFFFF;
+      color: var(--primary-black);
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      z-index: 5;
+    }
+
+    .category-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    }
+
+    .category-card::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background-color: #333;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+    .category-card:hover::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .category-number {
+      background: var(--primary-blue);
+      color: var(--primary-white);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    .category-name {
+      font-size: 1.15rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .category-description {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .category-cards,
+    .house-listings {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      width: 100%;
+      max-width: none;
+      margin: 0 auto;
+    }
+
+    .listings-section {
+      padding: 2rem;
+    }
+
+    .input-group {
+      position: relative;
+      min-width: 280px;
+      flex: 1;
+    }
+
+    .search-form {
+      gap: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <span class="brand">Enigma Home</span>
+    <ul>
+      <li><a href="#" class="active">Home</a></li>
+      <li><a href="#">About</a></li>
+      <li><a href="#">Categories</a></li>
+      <li><a href="#">Gallery</a></li>
+      <li><a href="#">Contact US</a></li>
+    </ul>
+    <div class="actions">
+      <a href="#" class="signin">Sign in</a>
+      <a href="#" class="signup">Create Account</a>
+    </div>
+  </nav>
+
+  <section class="hero-section">
+    <h1 class="hero-title">Find Your Perfect Student Room</h1>
+    <h2 class="hero-subtitle">Near Campus</h2>
+    <p class="hero-description">
+      Affordable, secure, and flexible student housing for university life. Search for 
+      bedsitters, single rooms, and more—pay monthly or per semester, all close to 
+      your campus and student hotspots.
+    </p>
+    
+    <div class="search-section">
+      <div class="search-container">
+        <form class="search-form">
+          <div class="input-group">
+            <input type="text" id="estate" placeholder=" ">
+            <label for="estate">Search by estate, nickname</label>
+          </div>
+          <div class="input-group">
+            <select id="type" placeholder=" ">
+              <option value="">All Types</option>
+              <option value="bedsitter">Bedsitter</option>
+              <option value="single">Single Room</option>
+              <option value="double">Double Room</option>
+              <option value="apartment">Apartment</option>
+            </select>
+            <label for="type">Room Type</label>
+          </div>
+          <div class="input-group">
+            <select id="price" placeholder=" ">
+              <option value="2000">Ksh 2000</option>
+              <option value="3000">Ksh 3000</option>
+              <option value="4000">Ksh 4000</option>
+              <option value="5000">Ksh 5000+</option>
+            </select>
+            <label for="price">Price Range</label>
+          </div>
+          <button type="submit" class="search-button">FIND ROOM</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="category-section">
+    <h2 class="category-title">Browse Student Rooms by Category</h2>
+    <div class="category-cards">
+      <div class="category-card" data-tooltip="Secure, well-maintained bedsitters with essential amenities. Perfect for independent living.">
+        <div class="category-number">20</div>
+        <div class="category-name">Bedsitters</div>
+        <div class="category-description">Secure, Female/Male Only, Near Campus</div>
+      </div>
+      
+      <div class="category-card" data-tooltip="Budget-friendly single rooms with essential amenities. Great for students looking for affordable options.">
+        <div class="category-number">31</div>
+        <div class="category-name">Single Rooms</div>
+        <div class="category-description">Affordable, Walk to Class</div>
+      </div>
+      
+      <div class="category-card" data-tooltip="Spacious two-bedroom units ideal for sharing with a classmate. Split costs while enjoying more space.">
+        <div class="category-number">12</div>
+        <div class="category-name">Two Bedrooms</div>
+        <div class="category-description">Share with a Friend</div>
+      </div>
+      
+      <div class="category-card" data-tooltip="Semester payment options available for long-term stays. Better rates for committed tenants.">
+        <div class="category-number">8</div>
+        <div class="category-name">Pay Per Semester</div>
+        <div class="category-description">Flexible Payment</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="listings-section">
+    <h2 class="listings-title">Available Student Rooms</h2>
+    <div class="house-listings">
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=400&q=80" alt="Bedsitter near MMUST" />
+        <div class="house-info">
+          <h3>Bedsitter - Lurambi, Near MMUST Gate</h3>
+          <div class="house-price">KES 4,000 / month</div>
+          <p>
+            Spacious bedsitter<br>
+            Tiled floors<br>
+            Wi-Fi included<br>
+            Secure area<br>
+            Water included<br>
+            10 min walk to campus<br>
+            Female only
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254712345678" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254712345678" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80" alt="Single Room Kakamega" />
+        <div class="house-info">
+          <h3>Single Room - Kakamega Bypass</h3>
+          <div class="house-price">KES 3,000 / month</div>
+          <p>
+            Bright single room<br>
+            Painted walls<br>
+            Shared token meter<br>
+            Water separated<br>
+            15 min to campus<br>
+            Male only<br>
+            Affordable
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254798765432" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254798765432" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80" alt="Two Bedroom MMUST" />
+        <div class="house-info">
+          <h3>Two Bedroom - Near MMUST, Pay Per Semester</h3>
+          <div class="house-price">KES 20,000 / semester</div>
+          <p>
+            Modern two-bedroom<br>
+            Share with a friend<br>
+            Wi-Fi included<br>
+            Water included<br>
+            5 min walk to campus<br>
+            Secure area<br>
+            Flexible payment
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254700123456" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254700123456" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80" alt="Bedsitter Lurambi" />
+        <div class="house-info">
+          <h3>Bedsitter - Lurambi, Near Shopping Centre</h3>
+          <div class="house-price">KES 2,500 / month</div>
+          <p>
+            Affordable bedsitter<br>
+            Tiled floors<br>
+            Wi-Fi included<br>
+            Water separated<br>
+            20 min walk to campus<br>
+            Mixed gender<br>
+            Safe area
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254701234567" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254701234567" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=400&q=80" alt="Bedsitter MMUST" />
+        <div class="house-info">
+          <h3>Bedsitter - MMUST Hostels</h3>
+          <div class="house-price">KES 4,500 / month</div>
+          <p>
+            Modern bedsitter<br>
+            Tiled floors<br>
+            Wi-Fi included<br>
+            Water included<br>
+            2 min walk to campus<br>
+            Secure area<br>
+            Male only
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254788888888" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254788888888" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80" alt="Single Room MMUST" />
+        <div class="house-info">
+          <h3>Single Room - Opposite Main Gate</h3>
+          <div class="house-price">KES 3,200 / month</div>
+          <p>
+            Spacious single room<br>
+            Freshly painted<br>
+            Wi-Fi included<br>
+            Water included<br>
+            5 min walk to campus<br>
+            Male only<br>
+            Affordable
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254733333333" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254733333333" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80" alt="Two Bedroom Lurambi" />
+        <div class="house-info">
+          <h3>Two Bedroom - Near Market</h3>
+          <div class="house-price">KES 22,000 / semester</div>
+          <p>
+            Modern two-bedroom<br>
+            Share with a friend<br>
+            Wi-Fi included<br>
+            Water included<br>
+            7 min walk to campus<br>
+            Secure compound<br>
+            Flexible payment
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254744444444" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254744444444" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=400&q=80" alt="Bedsitter Library" />
+        <div class="house-info">
+          <h3>Bedsitter - Near Library</h3>
+          <div class="house-price">KES 3,600 / month</div>
+          <p>
+            Quiet bedsitter<br>
+            Tiled floors<br>
+            Wi-Fi included<br>
+            Water included<br>
+            6 min walk to campus<br>
+            Female only<br>
+            Secure area
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254755555555" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254755555555" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80" alt="Single Room Shopping" />
+        <div class="house-info">
+          <h3>Single Room - Shopping Centre</h3>
+          <div class="house-price">KES 2,800 / month</div>
+          <p>
+            Budget friendly<br>
+            Newly painted<br>
+            Token meter<br>
+            Water separated<br>
+            18 min walk to campus<br>
+            Mixed gender<br>
+            Safe location
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254766666666" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254766666666" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=400&q=80" alt="Bedsitter Block B" />
+        <div class="house-info">
+          <h3>Bedsitter - Block B Hostels</h3>
+          <div class="house-price">KES 4,700 / month</div>
+          <p>
+            Premium bedsitter<br>
+            Tiled floors<br>
+            High-speed Wi-Fi<br>
+            Water included<br>
+            1 min walk to campus<br>
+            Male only<br>
+            24/7 security
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254777777777" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254777777777" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80" alt="Single Room Deluxe" />
+        <div class="house-info">
+          <h3>Single Room - Deluxe Edition</h3>
+          <div class="house-price">KES 3,800 / month</div>
+          <p>
+            Luxury finishing<br>
+            Modern design<br>
+            Fast Wi-Fi<br>
+            Water included<br>
+            4 min walk to campus<br>
+            Female only<br>
+            CCTV security
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254788888888" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254788888888" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80" alt="Two Bedroom Premium" />
+        <div class="house-info">
+          <h3>Two Bedroom - Premium Suite</h3>
+          <div class="house-price">KES 25,000 / semester</div>
+          <p>
+            Luxury apartment<br>
+            Balcony included<br>
+            High-speed Wi-Fi<br>
+            Water included<br>
+            3 min walk to campus<br>
+            Mixed gender<br>
+            Premium location
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254799999999" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254799999999" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=400&q=80" alt="Bedsitter Economy" />
+        <div class="house-info">
+          <h3>Bedsitter - Economy Package</h3>
+          <div class="house-price">KES 2,800 / month</div>
+          <p>
+            Basic amenities<br>
+            Clean and neat<br>
+            Shared Wi-Fi<br>
+            Water available<br>
+            15 min walk to campus<br>
+            Mixed gender<br>
+            Affordable option
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254711111111" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254711111111" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80" alt="Single Room Cozy" />
+        <div class="house-info">
+          <h3>Single Room - Cozy Corner</h3>
+          <div class="house-price">KES 3,300 / month</div>
+          <p>
+            Cozy atmosphere<br>
+            Well ventilated<br>
+            Wi-Fi available<br>
+            Water included<br>
+            12 min walk to campus<br>
+            Female only<br>
+            Quiet environment
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254722222222" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254722222222" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80" alt="Two Bedroom Standard" />
+        <div class="house-info">
+          <h3>Two Bedroom - Standard</h3>
+          <div class="house-price">KES 18,000 / semester</div>
+          <p>
+            Standard apartment<br>
+            Good condition<br>
+            Wi-Fi ready<br>
+            Water weekly<br>
+            10 min walk to campus<br>
+            Mixed gender<br>
+            Affordable sharing
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254733333333" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254733333333" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=400&q=80" alt="Bedsitter Modern" />
+        <div class="house-info">
+          <h3>Bedsitter - Modern Living</h3>
+          <div class="house-price">KES 4,200 / month</div>
+          <p>
+            Modern design<br>
+            Tiled floors<br>
+            Fast Wi-Fi<br>
+            Water daily<br>
+            8 min walk to campus<br>
+            Mixed gender<br>
+            Contemporary style
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254744444444" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254744444444" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80" alt="Single Room Premium" />
+        <div class="house-info">
+          <h3>Single Room - Premium</h3>
+          <div class="house-price">KES 3,900 / month</div>
+          <p>
+            Premium finishing<br>
+            Modern design<br>
+            High-speed Wi-Fi<br>
+            Water included<br>
+            5 min walk to campus<br>
+            Female only<br>
+            Luxury amenities
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254755555555" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254755555555" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80" alt="Two Bedroom Luxury" />
+        <div class="house-info">
+          <h3>Two Bedroom - Luxury</h3>
+          <div class="house-price">KES 28,000 / semester</div>
+          <p>
+            Luxury finishing<br>
+            Master ensuite<br>
+            Fiber Wi-Fi<br>
+            Water 24/7<br>
+            2 min walk to campus<br>
+            Mixed gender<br>
+            Premium facilities
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254766666666" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254766666666" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=400&q=80" alt="Bedsitter Comfort" />
+        <div class="house-info">
+          <h3>Bedsitter - Comfort Zone</h3>
+          <div class="house-price">KES 3,700 / month</div>
+          <p>
+            Comfortable space<br>
+            Well maintained<br>
+            Reliable Wi-Fi<br>
+            Water regular<br>
+            7 min walk to campus<br>
+            Male only<br>
+            Secure environment
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254777777777" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254777777777" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-card">
+        <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80" alt="Single Room Budget" />
+        <div class="house-info">
+          <h3>Single Room - Budget Plus</h3>
+          <div class="house-price">KES 2,900 / month</div>
+          <p>
+            Value for money<br>
+            Clean space<br>
+            Wi-Fi option<br>
+            Water available<br>
+            15 min walk to campus<br>
+            Mixed gender<br>
+            Basic amenities
+          </p>
+          <div class="agent-contact-group">
+            <a href="https://wa.me/254788888888" class="agent-btn whatsapp" target="_blank">WhatsApp</a>
+            <a href="mailto:info@enigmahome.com?subject=House%20Inquiry" class="agent-btn email">Email</a>
+            <a href="sms:+254788888888" class="agent-btn sms">SMS</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>Enigma Home</h4>
+        <p>Find your perfect student room near campus. Affordable, secure, and flexible student housing for university life.</p>
+      </div>
+      <div class="footer-section">
+        <h4>Contact Us</h4>
+        <p>Email: info@enigmahome.com</p>
+        <p>Phone: +254 712 345 678</p>
+        <p>WhatsApp: +254 712 345 678</p>
+      </div>
+      <div class="footer-section">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Categories</a></li>
+          <li><a href="#">Gallery</a></li>
+          <li><a href="#">Contact US</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Legal</h4>
+        <p>&copy; 2024 Enigma Home. All rights reserved.</p>
+        <p>Use of this site constitutes acceptance of our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+        <p>Listings are for informational purposes only. Contact agents for up-to-date information.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll animation for house cards
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    // Observe all house cards
+    document.querySelectorAll('.house-card').forEach(card => {
+      observer.observe(card);
+    });
+
+    // Category card hover effect
+    document.querySelectorAll('.category-card').forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        card.style.transform = 'translateY(-5px)';
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'translateY(0)';
+      });
+    });
+  </script>
+</body>
+</html> 
