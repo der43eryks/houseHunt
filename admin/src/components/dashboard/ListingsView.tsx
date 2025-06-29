@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Edit, Trash2, Eye, Search, Filter, Plus } from 'lucide-react';
 import { adminAPI } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 interface Listing {
   id: string;
@@ -19,6 +20,7 @@ const ListingsView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -68,7 +70,10 @@ const ListingsView: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Property Listings</h1>
           <p className="text-gray-600">Manage all your property listings</p>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2"
+          onClick={() => navigate('/dashboard/add-listing')}
+        >
           <Plus size={20} />
           Add New Listing
         </button>

@@ -1,4 +1,26 @@
-# HouseHunt Client Site - Functionalities & Pages Documentation
+# HouseHunt Client & Admin Site - Functionalities & Pages Documentation
+
+## Recent Updates (June 2025)
+
+### Unified Admin Login/Register
+- The client site now redirects all login and registration actions to the admin portal for a single, consistent authentication experience.
+- The admin login/register UI is accessible from anywhere, and the client `/auth` route redirects to the admin login page.
+
+### Real API Integration & Real-Time Streaming
+- All listings, stats, and dashboard data now use real API endpoints (no mock data).
+- When an admin creates a new listing, it is instantly streamed to the client site using Server-Sent Events (SSE), so students see new properties in real time.
+- Image uploads are handled by the backend and stored locally (or in the configured storage).
+
+### Listings Status Dropdown Filter (Admin)
+- The admin listings page now features a status dropdown (All Status, Available, Rented, Pending).
+- Selecting a status filters the listings in real time, both on the frontend and via API query params for large datasets.
+- The filter is case-insensitive and works with all status options.
+
+### Responsive & Flexible Layouts
+- All admin dashboard components now use `w-full`, `max-w-full`, `container mx-auto`, and `flex-wrap` for full responsiveness.
+- No fixed widths are used except for sidebars/avatars, ensuring the UI adapts to all screen sizes without horizontal scroll.
+
+---
 
 ## Project Overview
 HouseHunt is a student accommodation platform serving MMUST and surrounding areas in Kakamega, Kenya. The client site was started in 2020 and provides a comprehensive platform for students to find, view, and inquire about student housing options.

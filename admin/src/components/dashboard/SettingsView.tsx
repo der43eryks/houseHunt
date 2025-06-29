@@ -92,33 +92,70 @@ const SettingsView: React.FC = () => {
   const handleExportData = async () => {
     setLoading(true);
     setError(null);
+    setSuccess(null);
     
     try {
-      // Get user data
-      const profileResponse = await adminAPI.getProfile();
-      const listingsResponse = await adminAPI.getListings();
+      console.log('🔄 Starting data export...');
       
+      // Get user profile data
+      console.log('📋 Fetching profile data...');
+      const profileResponse = await adminAPI.getProfile();
+      console.log('✅ Profile response:', profileResponse);
+      
+      // Get listings data
+      console.log('🏠 Fetching listings data...');
+      const listingsResponse = await adminAPI.getListings();
+      console.log('✅ Listings response:', listingsResponse);
+      
+      // Prepare export data
       const exportData = {
-        profile: profileResponse.data,
-        listings: listingsResponse.data,
+        profile: profileResponse || {},
+        listings: listingsResponse?.data || listingsResponse || [],
         settings: settings,
-        exportDate: new Date().toISOString()
+        exportDate: new Date().toISOString(),
+        exportInfo: {
+          totalListings: Array.isArray(listingsResponse?.data) ? listingsResponse.data.length : 
+                        Array.isArray(listingsResponse) ? listingsResponse.length : 0,
+          exportVersion: '1.0',
+          platform: 'HouseHunt Admin'
+        }
       };
       
+      console.log('📦 Prepared export data:', exportData);
+      
       // Create and download file
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const jsonString = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
+      
       const a = document.createElement('a');
       a.href = url;
       a.download = `househunt-admin-data-${new Date().toISOString().split('T')[0]}.json`;
+      a.style.display = 'none';
+      
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      setSuccess('Data exported successfully');
+      console.log('✅ Data export completed successfully');
+      setSuccess('Data exported successfully! Check your downloads folder.');
+      
     } catch (err: any) {
-      setError('Failed to export data');
+      console.error('❌ Export data error:', err);
+      
+      // Provide specific error messages
+      let errorMessage = 'Failed to export data';
+      
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.error) {
+        errorMessage = err.error;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      setError(`Export failed: ${errorMessage}. Please check your connection and try again.`);
     } finally {
       setLoading(false);
     }

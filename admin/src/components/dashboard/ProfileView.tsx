@@ -4,6 +4,12 @@ import { adminAPI } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 
+const ROLE_OPTIONS = [
+  { value: 'Admin', label: 'Admin' },
+  { value: 'Manager', label: 'Manager' },
+  { value: 'Staff', label: 'Staff' },
+];
+
 const ProfileView: React.FC = () => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -34,6 +40,7 @@ const ProfileView: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -77,23 +84,51 @@ const ProfileView: React.FC = () => {
     }));
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAvatarFile(e.target.files[0]);
+      setProfileData(prev => ({
+        ...prev,
+        avatar: URL.createObjectURL(e.target.files[0])
+      }));
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setError(null);
     setSuccess(null);
     try {
-      const response = await adminAPI.updateProfile({
-        username: profileData.username,
-        email: profileData.email,
-        phone: profileData.phone,
-        role: profileData.role
-      });
-      
-      if (response.success) {
-        setIsEditing(false);
-        setSuccess('Profile updated successfully');
+      let avatarUrl = profileData.avatar;
+      if (avatarFile) {
+        // If your backend expects a file upload, use FormData
+        const formData = new FormData();
+        formData.append('username', profileData.username);
+        formData.append('email', profileData.email);
+        formData.append('phone', profileData.phone);
+        formData.append('role', profileData.role);
+        formData.append('avatar', avatarFile);
+        const response = await adminAPI.updateProfile(formData, true); // true = multipart
+        if (response.success) {
+          setIsEditing(false);
+          setSuccess('Profile updated successfully');
+        } else {
+          setError(response.error || 'Failed to update profile');
+        }
       } else {
-        setError(response.error || 'Failed to update profile');
+        // No new avatar, just update text fields
+        const response = await adminAPI.updateProfile({
+          username: profileData.username,
+          email: profileData.email,
+          phone: profileData.phone,
+          role: profileData.role
+        });
+        if (response.success) {
+          setIsEditing(false);
+          setSuccess('Profile updated successfully');
+        } else {
+          setError(response.error || 'Failed to update profile');
+        }
       }
     } catch (err: any) {
       setError(err?.error || err?.message || 'Failed to update profile');
@@ -205,9 +240,22 @@ const ProfileView: React.FC = () => {
                   className="w-24 h-24 sm:w-32 sm:h-32 rounded-full mx-auto mb-4 object-cover"
                 />
                 {isEditing && (
-                  <button className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-blue-600 text-white p-1.5 sm:p-2 rounded-full hover:bg-blue-700 transition-colors duration-200">
-                    <Camera size={14} className="sm:w-4 sm:h-4" />
-                  </button>
+                  <>
+                    <button
+                      className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-blue-600 text-white p-1.5 sm:p-2 rounded-full hover:bg-blue-700 transition-colors duration-200"
+                      onClick={() => document.getElementById('avatar-upload')?.click()}
+                      type="button"
+                    >
+                      <Camera size={14} className="sm:w-4 sm:h-4" />
+                    </button>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                  </>
                 )}
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -248,14 +296,26 @@ const ProfileView: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('profile.role')}</label>
-                  <input
-                    type="text"
-                    name="role"
-                    value={profileData.role}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
+                  {isEditing ? (
+                    <select
+                      name="role"
+                      value={profileData.role}
+                      onChange={handleInputChange}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    >
+                      {ROLE_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      name="role"
+                      value={profileData.role}
+                      disabled
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('profile.email')}</label>
