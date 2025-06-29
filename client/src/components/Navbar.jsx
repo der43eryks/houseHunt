@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
@@ -18,17 +18,15 @@ const Navbar = () => {
           <Link to="/contact" className="text-gray-300 hover:text-white transition-colors duration-250">Contact Us</Link>
         </div>
         <div className="hidden md:flex items-center space-x-2">
-          <Link to="/auth" className="text-white hover:text-white transition-colors duration-250 px-5 py-2 rounded-lg border-2 border-blue-600 hover:bg-blue-600/30 text-sm font-semibold">
+          <a href="http://localhost:3001/login" target="_blank" rel="noopener noreferrer" className="text-white hover:text-white transition-colors duration-250 px-5 py-2 rounded-lg border-2 border-blue-600 hover:bg-blue-600/30 text-sm font-semibold">
             Log in
-          </Link>
-          <Link to="/auth" className="bg-[#D94D4C] text-white hover:bg-red-700 transition-colors duration-300 px-5 py-2 rounded-lg text-sm font-semibold"
-            onClick={() => sessionStorage.setItem('activeTab', 'signup')}
-          >
+          </a>
+          <a href="http://localhost:3001/register" target="_blank" rel="noopener noreferrer" className="bg-[#D94D4C] text-white hover:bg-red-700 transition-colors duration-300 px-5 py-2 rounded-lg text-sm font-semibold">
             Sign Up
-          </Link>
-          <Link to="http://localhost:3001" className="text-gray-300 hover:text-white transition-colors duration-250 px-3 py-2 rounded-lg border border-gray-600 hover:border-blue-600 text-sm font-semibold">
+          </a>
+          <a href="http://localhost:3001" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors duration-250 px-3 py-2 rounded-lg border border-gray-600 hover:border-blue-600 text-sm font-semibold">
             Admin
-          </Link>
+          </a>
         </div>
         <div className="md:hidden">
           {/* Mobile Menu Button */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -10,9 +10,30 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AuthPage from './pages/AuthPage';
 import VerifyPage from './pages/VerifyPage';
+import { eventStream } from './services/streaming';
 import './App.css';
 
 function App() {
+  useEffect(() => {
+    // Connect to SSE when app loads
+    eventStream.connect();
+    
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+    
+    // Listen for new listings
+    eventStream.addListener('new_listing', (listing) => {
+      // Update your listings state or show notification
+      console.log('New listing:', listing);
+    });
+    
+    return () => {
+      eventStream.disconnect();
+    };
+  }, []);
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex flex-col">

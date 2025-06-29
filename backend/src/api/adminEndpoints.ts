@@ -8,6 +8,7 @@ import { authenticateToken, requireRole, generateToken } from '../middleware/aut
 import { validateRequest, listingSchema, inquirySchema, adminLoginSchema, adminRegistrationSchema, helpDeskSchema } from '../middleware/validation';
 import multer from 'multer';
 import path from 'path';
+import { sseManager } from '../middleware/sse';
 
 const router = Router();
 
@@ -220,15 +221,22 @@ router.get('/listings', authenticateToken, async (req: Request, res: Response) =
 });
 
 // Create a new listing
-router.post('/listings', authenticateToken, validateRequest(listingSchema), async (req: Request, res: Response) => {
+router.post('/listings', authenticateToken, upload.array('images', 5), async (req: any, res: Response) => {
   try {
     const listing = await ListingModel.create(req.body);
-    res.status(201).json({
+    
+    // Send notification to all clients about new listing
+    sseManager.sendToAll('client', {
+      type: 'new_listing',
+      data: listing
+    });
+    
+    return res.status(201).json({
       success: true,
       data: listing
     });
   } catch (error) {
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false, 
       error: 'Failed to create listing' 
     });

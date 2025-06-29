@@ -7,6 +7,7 @@ import path from 'path';
 import adminEndpoints from './api/adminEndpoints';
 import clientEndpoints from './api/clientEndpoints';
 import { testConnection } from './config/database';
+import streamingEndpoints from './api/streamingEndpoints';
 
 // Load environment variables
 dotenv.config();
@@ -56,6 +57,7 @@ app.get('/api/health', (req, res) => {
 // API routes
 app.use('/api/admin', adminEndpoints);
 app.use('/api/client', clientEndpoints);
+app.use('/api/stream', streamingEndpoints);
 
 // 404 handler
 app.use('/api/*', (req, res) => {
