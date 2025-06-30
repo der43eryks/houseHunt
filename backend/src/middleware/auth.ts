@@ -7,8 +7,8 @@ interface AuthRequest extends Request {
 }
 
 export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  // Read token from cookie, not header
+  const token = req.cookies?.access_token;
 
   if (!token) {
     return res.status(401).json({ 

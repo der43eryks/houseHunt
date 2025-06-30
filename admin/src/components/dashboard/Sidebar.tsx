@@ -20,7 +20,7 @@ const Sidebar: React.FC = () => {
 
   const handleSignOut = () => {
     // Add sign out logic here
-    localStorage.removeItem('adminToken');
+    // localStorage.removeItem('adminToken');
     window.location.href = '/';
   };
 

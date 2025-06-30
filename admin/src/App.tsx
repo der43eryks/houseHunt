@@ -21,25 +21,7 @@ function RequireAuth({ children }: { children: JSX.Element }) {
 
 function App() {
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (token) {
-      adminEventStream.connect(token);
-      
-      // Request notification permission
-      if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
-      
-      // Listen for new inquiries
-      adminEventStream.addListener('new_inquiry', (inquiry) => {
-        // Update your inquiries state or show notification
-        console.log('New inquiry:', inquiry);
-      });
-    }
-    
-    return () => {
-      adminEventStream.disconnect();
-    };
+    // Remove all code that gets adminToken from localStorage for authentication
   }, []);
 
   return (

@@ -49,10 +49,17 @@ router.post('/login', validateRequest(adminLoginSchema), async (req: Request, re
     const token = generateToken(admin.id);
     const { passwordHash, ...adminWithoutPassword } = admin;
 
+    // Set JWT as HttpOnly, Secure cookie
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    });
+
     return res.json({
       success: true,
       data: {
-        token,
         admin: adminWithoutPassword
       }
     });
@@ -467,6 +474,16 @@ router.get('/stats', authenticateToken, async (req: Request, res: Response) => {
       error: 'Failed to fetch stats' 
     });
   }
+});
+
+// Admin logout
+router.post('/logout', (req: Request, res: Response) => {
+  res.clearCookie('access_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  });
+  return res.json({ success: true, message: 'Logged out' });
 });
 
 export default router; 

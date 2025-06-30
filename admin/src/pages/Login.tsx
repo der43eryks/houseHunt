@@ -76,7 +76,6 @@ const Login: React.FC = () => {
       const res = await adminAPI.login({ email, password });
       
       if (res.success && res.data?.token) {
-        localStorage.setItem('adminToken', res.data.token);
         navigate('/dashboard');
       } else {
         setErrors({ general: res.error || 'Login failed. Please check your credentials.' });

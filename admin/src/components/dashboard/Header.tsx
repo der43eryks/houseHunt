@@ -12,7 +12,6 @@ const Header: React.FC<{ title: string }> = ({ title }) => {
   const clientUrl = import.meta.env.VITE_CLIENT_URL || 'http://localhost:5173';
 
   const handleLogout = () => {
-    localStorage.removeItem('adminToken');
     navigate('/');
   };
 
