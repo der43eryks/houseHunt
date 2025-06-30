@@ -7,11 +7,8 @@ class AdminEventStream {
 
   connect(token: string) {
     try {
-      this.eventSource = new EventSource(`/api/stream/admin/stream`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4002/api';
+      this.eventSource = new EventSource(`${API_BASE_URL}/stream/admin/stream?token=${encodeURIComponent(token)}`);
       
       this.eventSource.onopen = () => {
         console.log('Admin SSE connection established');

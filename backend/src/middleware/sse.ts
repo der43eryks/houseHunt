@@ -13,7 +13,7 @@ class SSEManager {
 
   // Initialize SSE connection
   setupSSE(req: Request, res: Response, userType: 'admin' | 'client', userId?: string): string {
-    const connectionId = `${userType}-${userId || Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const connectionId = `${userType}-${userId || Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     
     // Set SSE headers
     res.writeHead(200, {

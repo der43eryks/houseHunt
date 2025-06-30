@@ -8,6 +8,7 @@ import adminEndpoints from './api/adminEndpoints';
 import clientEndpoints from './api/clientEndpoints';
 import { testConnection } from './config/database';
 import streamingEndpoints from './api/streamingEndpoints';
+import morgan from 'morgan';
 
 // Load environment variables
 dotenv.config();
@@ -44,6 +45,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Static file serving for uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Add detailed request logging
+app.use(morgan('combined'));
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ 
@@ -69,7 +73,14 @@ app.use('/api/*', (req, res) => {
 
 // Global error handler
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Global error handler:', error);
+  console.error('=== GLOBAL ERROR HANDLER ===');
+  console.error('Error:', error);
+  console.error('Request URL:', req.url);
+  console.error('Request Method:', req.method);
+  console.error('Request Headers:', req.headers);
+  console.error('Request Body:', req.body);
+  console.error('Stack Trace:', error.stack);
+  console.error('==========================');
   
   if (error.name === 'ValidationError') {
     return res.status(400).json({

@@ -44,11 +44,8 @@ const Verify: React.FC = () => {
       // For demo purposes, accept any 4-digit code
       // In a real application, this would call the backend verification API
       if (verificationCode.length === CODE_LENGTH && /^\d{4}$/.test(verificationCode)) {
-        // Success - set demo token and redirect to dashboard
-        // In a real app, this would be the actual JWT token from the backend
-        const demoToken = 'demo-verification-token-' + Date.now();
-        localStorage.setItem('adminToken', demoToken);
-        navigate('/dashboard');
+        // Success - redirect to login page
+        navigate('/', { state: { verified: true, email } });
       } else {
         setError('Invalid verification code. Please try again.');
       }
