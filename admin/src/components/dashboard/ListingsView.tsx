@@ -20,6 +20,9 @@ const ListingsView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isSecureArea, setIsSecureArea] = useState<boolean | undefined>(undefined);
+  const [minRating, setMinRating] = useState<number | undefined>(undefined);
+  const [createdAfter, setCreatedAfter] = useState<string | undefined>(undefined);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,12 +30,13 @@ const ListingsView: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await adminAPI.getListings();
-        if (response.success) {
-          setListings(response.data.data || response.data); // support both paginated and flat
-        } else {
-          setError(response.error || 'Failed to fetch listings');
-        }
+        const params: any = {};
+        if (searchTerm) params.search = searchTerm;
+        if (isSecureArea !== undefined) params.isSecureArea = isSecureArea;
+        if (minRating !== undefined) params.minRating = minRating;
+        if (createdAfter) params.createdAfter = createdAfter;
+        const response = await adminAPI.getListings(params);
+        setListings(response.data?.data || response.data || response); // support both paginated and flat
       } catch (err: any) {
         setError(err?.error || err?.message || 'Failed to fetch listings');
       } finally {
@@ -40,7 +44,7 @@ const ListingsView: React.FC = () => {
       }
     };
     fetchListings();
-  }, []);
+  }, [searchTerm, isSecureArea, minRating, createdAfter]);
 
   const filteredListings = listings.filter(listing => {
     const matchesSearch = listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,28 +85,98 @@ const ListingsView: React.FC = () => {
 
       {/* Filters */}
       <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search listings..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
+        <fieldset className="border border-blue-200 rounded-xl p-4 mb-2">
+          <legend className="text-base font-semibold text-blue-700 px-2">Filters</legend>
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex-1 relative">
+              <label htmlFor="searchTerm" className="sr-only">Search listings</label>
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                id="searchTerm"
+                name="searchTerm"
+                type="text"
+                placeholder="Search listings..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                aria-label="Search listings"
+              />
+            </div>
+            <label htmlFor="statusFilter" className="sr-only">Status filter</label>
+            <select
+              id="statusFilter"
+              name="statusFilter"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              aria-label="Status filter"
+            >
+              <option value="all">All Status</option>
+              <option value="Available">Available</option>
+              <option value="Rented">Rented</option>
+              <option value="Pending">Pending</option>
+            </select>
+            <div className="flex items-center gap-2 group cursor-pointer" tabIndex={0}>
+              <input
+                id="isSecureAreaFilter"
+                name="isSecureAreaFilter"
+                type="checkbox"
+                checked={isSecureArea === true}
+                onChange={e => setIsSecureArea(e.target.checked ? true : undefined)}
+                className="accent-blue-600 focus:ring-2 focus:ring-blue-500"
+                aria-checked={isSecureArea === true}
+              />
+              <label htmlFor="isSecureAreaFilter" className={isSecureArea === true ? 'font-semibold text-blue-700' : ''}>
+                Secure Area Only
+              </label>
+              <span className="ml-1 text-xs text-gray-400 group-hover:text-blue-600" title="Show only listings in secure or gated areas.">
+                (i)
+              </span>
+            </div>
+            <div className="flex items-center gap-2 group cursor-pointer" tabIndex={0}>
+              <label htmlFor="createdAfter" className="mr-1">Created After:</label>
+              <input
+                id="createdAfter"
+                name="createdAfter"
+                type="date"
+                value={createdAfter ?? ''}
+                onChange={e => setCreatedAfter(e.target.value || undefined)}
+                className={createdAfter ? 'border-blue-500 border-2 rounded-xl px-2 py-1' : 'border border-gray-200 rounded-xl px-2 py-1'}
+                aria-label="Created After date filter"
+              />
+              <span className="ml-1 text-xs text-gray-400 group-hover:text-blue-600" title="Show only listings created after this date.">
+                (i)
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="minRating" className="mr-1">Min Rating:</label>
+              <input
+                id="minRating"
+                name="minRating"
+                type="number"
+                min={1}
+                max={5}
+                value={minRating ?? ''}
+                onChange={e => setMinRating(e.target.value ? Number(e.target.value) : undefined)}
+                className="w-16 border border-gray-200 rounded-xl px-2 py-1"
+                aria-label="Minimum rating filter"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsSecureArea(undefined);
+                setCreatedAfter(undefined);
+                setMinRating(undefined);
+                setSearchTerm('');
+              }}
+              className="ml-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-xl border border-gray-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Clear all filters"
+            >
+              Clear Filters
+            </button>
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          >
-            <option value="all">All Status</option>
-            <option value="Available">Available</option>
-            <option value="Rented">Rented</option>
-            <option value="Pending">Pending</option>
-          </select>
-        </div>
+        </fieldset>
       </div>
 
       {/* Loading/Error State */}

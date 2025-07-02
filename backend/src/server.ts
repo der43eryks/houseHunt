@@ -25,6 +25,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4002;
 
+// Step 1: Top-level request logger for debugging
+app.use((req, res, next) => {
+  console.log(`🔍 ${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  next();
+});
+
 // Security middleware
 app.use(helmet());
 
@@ -70,6 +78,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Step 2: Simple test endpoint for debugging
+app.get('/api/test', (req, res) => {
+  console.log('✅ Test endpoint reached');
+  res.json({ message: 'Server is working' });
+});
+
 // API routes
 app.use('/api/admin', adminEndpoints);
 app.use('/api/client', clientEndpoints);
@@ -110,6 +124,7 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
     });
   }
 
+  // Step 3: Show error message in development, generic in production
   return res.status(500).json({
     success: false,
     error: process.env.NODE_ENV === 'production' 
@@ -147,3 +162,4 @@ process.on('SIGINT', () => {
   console.log('🛑 SIGINT received, shutting down gracefully');
   process.exit(0);
 }); 
+

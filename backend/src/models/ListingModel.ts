@@ -5,7 +5,10 @@ import { v4 as uuidv4 } from 'uuid';
 export class ListingModel {
   // Get all listings with filters and pagination
   static async getAll(filters: ListingFilters = {}, page: number = 1, limit: number = 10): Promise<PaginatedResponse<Listing>> {
-    const offset = (page - 1) * limit;
+    // Defensive: ensure limit and offset are valid integers
+    const safeLimit = parseInt(limit as any) > 0 ? parseInt(limit as any) : 10;
+    const safePage = parseInt(page as any) > 0 ? parseInt(page as any) : 1;
+    const offset = (safePage - 1) * safeLimit;
     let whereClause = 'WHERE 1=1';
     const params: any[] = [];
 
@@ -37,12 +40,12 @@ export class ListingModel {
 
     if (filters.isSecureArea !== undefined) {
       whereClause += ' AND is_secure_area = ?';
-      params.push(filters.isSecureArea);
+      params.push(filters.isSecureArea ? 1 : 0);
     }
 
     if (filters.available !== undefined) {
       whereClause += ' AND available = ?';
-      params.push(filters.available);
+      params.push(filters.available ? 1 : 0);
     }
 
     if (filters.search) {
@@ -50,20 +53,36 @@ export class ListingModel {
       params.push(`%${filters.search}%`, `%${filters.search}%`, `%${filters.search}%`);
     }
 
+    if (filters.minRating !== undefined) {
+      whereClause += ' AND rating >= ?';
+      params.push(filters.minRating);
+    }
+
+    if (filters.createdAfter) {
+      const ts = filters.createdAfter.length === 10 ? `${filters.createdAfter} 00:00:00` : filters.createdAfter;
+      whereClause += ' AND created_at >= ?';
+      params.push(ts);
+    }
+
     // Get total count
     const countQuery = `SELECT COUNT(*) as total FROM listings ${whereClause}`;
     const [countResult] = await pool.execute(countQuery, params);
     const total = (countResult as any)[0].total;
 
+    // Add limit and offset at the end
+    params.push(safeLimit, offset);
     // Get listings with pagination
     const query = `
       SELECT * FROM listings 
       ${whereClause}
       ORDER BY is_secure_area DESC, rating DESC, created_at DESC
       LIMIT ? OFFSET ?
-    `;
-    
-    const [rows] = await pool.execute(query, [...params, limit, offset]);
+    `.trim();
+    // Log for debugging
+    console.log('[ListingModel.getAll] SQL:', query);
+    console.log('[ListingModel.getAll] Params:', params);
+    console.log('[ListingModel.getAll] Param Types:', params.map(v => typeof v));
+    const [rows] = await pool.execute(query, params);
     
     const listings = (rows as any[]).map(row => ({
       ...row,
@@ -77,7 +96,7 @@ export class ListingModel {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / safeLimit)
     };
   }
 
@@ -107,8 +126,8 @@ export class ListingModel {
         id, title, description, room_type, stay_two_people, price, 
         payment_frequency, location_text, area_nickname, tags, images, 
         amenities, is_secure_area, agent_phone, agent_whatsapp, 
-        agent_facebook, available
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        agent_facebook, available, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const params = [
@@ -116,7 +135,7 @@ export class ListingModel {
       data.title,
       data.description,
       data.roomType,
-      data.stayTwoPeople,
+      data.stayTwoPeople ? 1 : 0,
       data.price,
       data.paymentFrequency,
       data.locationText,
@@ -124,11 +143,12 @@ export class ListingModel {
       JSON.stringify(data.tags),
       JSON.stringify(data.images || []),
       JSON.stringify(data.amenities),
-      data.isSecureArea,
+      data.isSecureArea ? 1 : 0,
       data.agentPhone,
       data.agentWhatsApp,
       data.agentFacebook,
-      data.available
+      data.available ? 1 : 0,
+      data.status || 'published'
     ];
 
     await pool.execute(query, params);
@@ -162,7 +182,7 @@ export class ListingModel {
 
     if (data.stayTwoPeople !== undefined) {
       updateFields.push('stay_two_people = ?');
-      params.push(data.stayTwoPeople);
+      params.push(data.stayTwoPeople ? 1 : 0);
     }
 
     if (data.price !== undefined) {
@@ -202,7 +222,7 @@ export class ListingModel {
 
     if (data.isSecureArea !== undefined) {
       updateFields.push('is_secure_area = ?');
-      params.push(data.isSecureArea);
+      params.push(data.isSecureArea ? 1 : 0);
     }
 
     if (data.agentPhone !== undefined) {
@@ -222,7 +242,12 @@ export class ListingModel {
 
     if (data.available !== undefined) {
       updateFields.push('available = ?');
-      params.push(data.available);
+      params.push(data.available ? 1 : 0);
+    }
+
+    if (data.status !== undefined) {
+      updateFields.push('status = ?');
+      params.push(data.status);
     }
 
     if (updateFields.length === 0) {
@@ -248,7 +273,7 @@ export class ListingModel {
   // Update availability
   static async updateAvailability(id: string, available: boolean): Promise<boolean> {
     const query = 'UPDATE listings SET available = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-    const [result] = await pool.execute(query, [available, id]);
+    const [result] = await pool.execute(query, [available ? 1 : 0, id]);
     return (result as any).affectedRows > 0;
   }
 
@@ -275,6 +300,13 @@ export class ListingModel {
     const images = listing.images.filter(img => img !== imageUrl);
     const query = 'UPDATE listings SET images = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
     const [result] = await pool.execute(query, [JSON.stringify(images), id]);
+    return (result as any).affectedRows > 0;
+  }
+
+  // Mark a listing as booked
+  static async markAsBooked(id: string): Promise<boolean> {
+    const query = 'UPDATE listings SET status = ?, available = 0 WHERE id = ?';
+    const [result] = await pool.execute(query, ['booked', id]);
     return (result as any).affectedRows > 0;
   }
 } 

@@ -100,6 +100,8 @@ export interface ListingFilters {
   isSecureArea?: boolean;
   available?: boolean;
   search?: string;
+  minRating?: number;
+  createdAfter?: string; // ISO date string
 }
 
 // Form Types
@@ -120,10 +122,12 @@ export interface CreateListingRequest {
   agentWhatsApp?: string;
   agentFacebook?: string;
   available: boolean;
+  status?: 'published' | 'draft' | 'booked' | 'archived';
 }
 
 export interface UpdateListingRequest extends Partial<CreateListingRequest> {
   id: string;
+  status?: 'published' | 'draft' | 'booked' | 'archived';
 }
 
 export interface CreateInquiryRequest {

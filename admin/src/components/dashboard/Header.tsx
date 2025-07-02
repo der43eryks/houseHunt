@@ -38,7 +38,10 @@ const Header: React.FC<{ title: string }> = ({ title }) => {
           {/* Search Bar - Responsive */}
           <div className="relative flex-1 sm:flex-none">
             <div className="relative w-full sm:w-64 lg:w-80">
+              <label htmlFor="headerSearch" className="sr-only">Search</label>
               <input
+                id="headerSearch"
+                name="headerSearch"
                 type="text"
                 placeholder="Search..."
                 className="w-full pl-8 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"

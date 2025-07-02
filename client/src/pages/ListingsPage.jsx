@@ -28,16 +28,32 @@ const ListingsPage = () => {
   });
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSecureArea, setIsSecureArea] = useState(undefined);
+  const [minRating, setMinRating] = useState(undefined);
+  const [createdAfter, setCreatedAfter] = useState(undefined);
 
   useEffect(() => {
     setLoading(true);
-    clientAPI.getListings()
+    const params = {};
+    if (filters.area) params.location = filters.area;
+    if (filters.price) {
+      if (filters.price === '4000') params.maxPrice = 4000;
+      if (filters.price === '4000-6500') { params.minPrice = 4000; params.maxPrice = 6500; }
+      if (filters.price === '6500-8000') { params.minPrice = 6500; params.maxPrice = 8000; }
+      if (filters.price === '8000+') params.minPrice = 8000;
+    }
+    if (filters.type) params.roomType = filters.type;
+    if (filters.search) params.search = filters.search;
+    if (isSecureArea !== undefined) params.isSecureArea = isSecureArea;
+    if (minRating !== undefined) params.minRating = minRating;
+    if (createdAfter) params.createdAfter = createdAfter;
+    clientAPI.getListings(params)
       .then(res => {
         setListings(res.data?.data || []);
       })
       .catch(() => setListings([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [filters, isSecureArea, minRating, createdAfter]);
 
   const areaOptions = useMemo(() => Array.from(new Set(listings.map(l => l.locationText))), [listings]);
 
@@ -112,6 +128,37 @@ const ListingsPage = () => {
                 <Search className="h-5 w-5" />
               </button>
             </div>
+          </div>
+          <div className="flex flex-col w-full md:w-1/4">
+            <label className="text-white font-semibold mb-1 flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isSecureArea === true}
+                onChange={e => setIsSecureArea(e.target.checked ? true : undefined)}
+                className="mr-2"
+              />
+              Secure Area Only
+            </label>
+          </div>
+          <div className="flex flex-col w-full md:w-1/4">
+            <label className="text-white font-semibold mb-1">Min Rating</label>
+            <input
+              type="number"
+              min={1}
+              max={5}
+              value={minRating ?? ''}
+              onChange={e => setMinRating(e.target.value ? Number(e.target.value) : undefined)}
+              className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex flex-col w-full md:w-1/4">
+            <label className="text-white font-semibold mb-1">Created After</label>
+            <input
+              type="date"
+              value={createdAfter ?? ''}
+              onChange={e => setCreatedAfter(e.target.value || undefined)}
+              className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         </form>
 

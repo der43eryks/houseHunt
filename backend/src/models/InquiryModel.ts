@@ -5,30 +5,23 @@ import { v4 as uuidv4 } from 'uuid';
 export class InquiryModel {
   // Get all inquiries with pagination
   static async getAll(page: number = 1, limit: number = 20): Promise<{ data: Inquiry[], total: number, page: number, limit: number, totalPages: number }> {
-    const offset = (page - 1) * limit;
-
-    // Get total count
+    const safeLimit = Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : 20;
+    const safePage = Number.isFinite(Number(page)) && Number(page) > 0 ? Number(page) : 1;
+    const offset = (safePage - 1) * safeLimit;
+    const query = 'SELECT * FROM inquiries ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    // Log for debugging
+    console.log('[InquiryModel.getAll] SQL:', query);
+    console.log('[InquiryModel.getAll] Params:', [safeLimit, offset]);
+    const [rows] = await pool.execute(query, [safeLimit, offset]);
     const countQuery = 'SELECT COUNT(*) as total FROM inquiries';
     const [countResult] = await pool.execute(countQuery);
     const total = (countResult as any)[0].total;
-
-    // Get inquiries with listing details
-    const query = `
-      SELECT i.*, l.title as house_title, l.agent_phone as house_agent_phone
-      FROM inquiries i
-      LEFT JOIN listings l ON i.house_id = l.id
-      ORDER BY i.created_at DESC
-      LIMIT ? OFFSET ?
-    `;
-    
-    const [rows] = await pool.execute(query, [limit, offset]);
-    
     return {
       data: rows as Inquiry[],
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit)
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit)
     };
   }
 

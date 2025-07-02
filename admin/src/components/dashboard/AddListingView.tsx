@@ -5,30 +5,47 @@ import { adminAPI } from '../../services/api';
 const AddListingView: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
-    type: 'Bedsitter',
-    price: '',
-    location: '',
+    roomType: 'Bedsitter',
     description: '',
-    features: ['Wi-Fi', 'Security'],
-    gender: 'Any',
+    stayTwoPeople: false,
+    price: '',
+    paymentFrequency: 'Monthly',
+    locationText: '',
+    areaNickname: '',
+    tags: [],
     images: [] as File[],
-    contactPhone: '',
-    contactEmail: ''
+    amenities: ['Wi-Fi', 'Security'],
+    isSecureArea: false,
+    agentPhone: '',
+    agentWhatsApp: '',
+    agentFacebook: '',
+    available: true
   });
 
   const [newFeature, setNewFeature] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const propertyTypes = ['Bedsitter', 'Single Room', 'Two Bedroom', 'Studio'];
   const genderOptions = ['Any', 'Male Only', 'Female Only'];
+  const areaOptions = [
+    'Lurambi',
+    'Kakamega Bypass',
+    'MMUST Area',
+    'Town Centre',
+    'Kefinco',
+    'Milimani',
+    'Shieywe',
+    'Other'
+  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -50,10 +67,10 @@ const AddListingView: React.FC = () => {
   };
 
   const addFeature = () => {
-    if (newFeature.trim() && !formData.features.includes(newFeature.trim())) {
+    if (newFeature.trim() && !formData.amenities.includes(newFeature.trim())) {
       setFormData(prev => ({
         ...prev,
-        features: [...prev.features, newFeature.trim()]
+        amenities: [...prev.amenities, newFeature.trim()]
       }));
       setNewFeature('');
     }
@@ -62,32 +79,56 @@ const AddListingView: React.FC = () => {
   const removeFeature = (feature: string) => {
     setFormData(prev => ({
       ...prev,
-      features: prev.features.filter(f => f !== feature)
+      amenities: prev.amenities.filter(f => f !== feature)
     }));
+  };
+
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+    if (!formData.title || formData.title.length < 10) newErrors.title = 'Title must be at least 10 characters.';
+    if (!formData.description || formData.description.length < 20) newErrors.description = 'Description must be at least 20 characters.';
+    if (!formData.roomType) newErrors.roomType = 'Room type is required.';
+    if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) <= 0) newErrors.price = 'Price must be a positive number.';
+    if (!formData.paymentFrequency) newErrors.paymentFrequency = 'Payment frequency is required.';
+    if (!formData.locationText || formData.locationText.length < 10) newErrors.locationText = 'Location must be at least 10 characters.';
+    if (!formData.amenities || formData.amenities.length === 0) newErrors.amenities = 'At least one amenity is required.';
+    if (!formData.agentPhone || !/^\+254\d{9}$/.test(formData.agentPhone)) newErrors.agentPhone = 'Agent phone must be in Kenyan format: +254XXXXXXXXX';
+    return newErrors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setSuccess(null);
     setError(null);
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     try {
-      // For now, skip image upload, just send the rest
       const payload = { ...formData, images: undefined };
       const response = await adminAPI.createListing(payload);
       if (response.success) {
         setSuccess('Listing created successfully!');
         setFormData({
           title: '',
-          type: 'Bedsitter',
-          price: '',
-          location: '',
+          roomType: 'Bedsitter',
           description: '',
-          features: ['Wi-Fi', 'Security'],
-          gender: 'Any',
+          stayTwoPeople: false,
+          price: '',
+          paymentFrequency: 'Monthly',
+          locationText: '',
+          areaNickname: '',
+          tags: [],
           images: [],
-          contactPhone: '',
-          contactEmail: ''
+          amenities: ['Wi-Fi', 'Security'],
+          isSecureArea: false,
+          agentPhone: '',
+          agentWhatsApp: '',
+          agentFacebook: '',
+          available: true
         });
       } else {
         setError(response.error || 'Failed to create listing');
@@ -119,9 +160,10 @@ const AddListingView: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Property Title</label>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">Property Title</label>
               <input
                 type="text"
+                id="title"
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
@@ -129,24 +171,29 @@ const AddListingView: React.FC = () => {
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
+              {errors.title && <p className="text-red-600 text-xs mt-1">{errors.title}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Property Type</label>
+              <label htmlFor="roomType" className="block text-sm font-medium text-gray-700 mb-2">Property Type</label>
               <select
-                name="type"
-                value={formData.type}
+                id="roomType"
+                name="roomType"
+                value={formData.roomType}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
-                {propertyTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
+                <option value="Single">Single</option>
+                <option value="Bedsitter">Bedsitter</option>
+                <option value="Two-bedroom">Two-bedroom</option>
+                <option value="Other">Other</option>
               </select>
+              {errors.roomType && <p className="text-red-600 text-xs mt-1">{errors.roomType}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Monthly Rent (KSh)</label>
+              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">Monthly Rent (KSh)</label>
               <input
                 type="number"
+                id="price"
                 name="price"
                 value={formData.price}
                 onChange={handleInputChange}
@@ -154,22 +201,74 @@ const AddListingView: React.FC = () => {
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
+              {errors.price && <p className="text-red-600 text-xs mt-1">{errors.price}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+              <label htmlFor="paymentFrequency" className="block text-sm font-medium text-gray-700 mb-2">Payment Frequency</label>
+              <select
+                id="paymentFrequency"
+                name="paymentFrequency"
+                value={formData.paymentFrequency}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="Monthly">Monthly</option>
+                <option value="Semester">Semester</option>
+                <option value="Flexible">Flexible</option>
+              </select>
+              {errors.paymentFrequency && <p className="text-red-600 text-xs mt-1">{errors.paymentFrequency}</p>}
+            </div>
+            <div>
+              <label htmlFor="locationText" className="block text-sm font-medium text-gray-700 mb-2">Location</label>
               <input
                 type="text"
-                name="location"
-                value={formData.location}
+                id="locationText"
+                name="locationText"
+                value={formData.locationText}
                 onChange={handleInputChange}
                 placeholder="e.g., Lurambi, Kakamega"
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
+              {errors.locationText && <p className="text-red-600 text-xs mt-1">{errors.locationText}</p>}
+            </div>
+            <div>
+              <label htmlFor="areaNickname" className="block text-sm font-medium text-gray-700 mb-2">Area Nickname (optional)</label>
+              <select
+                id="areaNickname"
+                name="areaNickname"
+                value={formData.areaNickname === '' ? '' : areaOptions.includes(formData.areaNickname) ? formData.areaNickname : 'Other'}
+                onChange={e => {
+                  const value = e.target.value;
+                  setFormData(prev => ({
+                    ...prev,
+                    areaNickname: value === 'Other' ? '' : value
+                  }));
+                }}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">Select area (optional)</option>
+                {areaOptions.map(area => (
+                  <option key={area} value={area}>{area}</option>
+                ))}
+              </select>
+              {formData.areaNickname === '' && (
+                <input
+                  type="text"
+                  id="areaNicknameCustom"
+                  name="areaNicknameCustom"
+                  value={formData.areaNickname}
+                  onChange={e => setFormData(prev => ({ ...prev, areaNickname: e.target.value }))}
+                  placeholder="Enter custom area nickname"
+                  className="mt-2 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  disabled={formData.areaNickname !== '' && areaOptions.includes(formData.areaNickname)}
+                />
+              )}
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">Description</label>
               <textarea
+                id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
@@ -178,6 +277,49 @@ const AddListingView: React.FC = () => {
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
+              {errors.description && <p className="text-red-600 text-xs mt-1">{errors.description}</p>}
+            </div>
+            <div className="md:col-span-2 flex items-center gap-3 mt-2">
+              <input
+                id="isSecureArea"
+                name="isSecureArea"
+                type="checkbox"
+                checked={formData.isSecureArea}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="isSecureArea" className="text-sm font-medium text-gray-700 select-none cursor-pointer">
+                Secure Area
+              </label>
+              <span className="ml-2 text-xs text-gray-400" title="Check if this property is in a secure or gated area.">
+                (Check if this property is in a secure or gated area)
+              </span>
+            </div>
+            <div className="md:col-span-2 flex items-center gap-3 mt-2">
+              <input
+                id="stayTwoPeople"
+                name="stayTwoPeople"
+                type="checkbox"
+                checked={formData.stayTwoPeople}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="stayTwoPeople" className="text-sm font-medium text-gray-700 select-none cursor-pointer">
+                Suitable for Two People
+              </label>
+            </div>
+            <div className="md:col-span-2 flex items-center gap-3 mt-2">
+              <input
+                id="available"
+                name="available"
+                type="checkbox"
+                checked={formData.available}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              />
+              <label htmlFor="available" className="text-sm font-medium text-gray-700 select-none cursor-pointer">
+                Available
+              </label>
             </div>
           </div>
         </div>
@@ -187,7 +329,7 @@ const AddListingView: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Features & Amenities</h3>
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
-              {formData.features.map((feature, index) => (
+              {formData.amenities.map((feature, index) => (
                 <span
                   key={index}
                   className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
@@ -295,24 +437,35 @@ const AddListingView: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
               <input
                 type="tel"
-                name="contactPhone"
-                value={formData.contactPhone}
+                name="agentPhone"
+                value={formData.agentPhone}
                 onChange={handleInputChange}
                 placeholder="+254 700 000 000"
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
+              {errors.agentPhone && <p className="text-red-600 text-xs mt-1">{errors.agentPhone}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp</label>
               <input
-                type="email"
-                name="contactEmail"
-                value={formData.contactEmail}
+                type="tel"
+                name="agentWhatsApp"
+                value={formData.agentWhatsApp}
                 onChange={handleInputChange}
-                placeholder="contact@example.com"
+                placeholder="+254 700 000 000"
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Facebook</label>
+              <input
+                type="text"
+                name="agentFacebook"
+                value={formData.agentFacebook}
+                onChange={handleInputChange}
+                placeholder="https://www.facebook.com/example"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
           </div>

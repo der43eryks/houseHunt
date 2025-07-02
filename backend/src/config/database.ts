@@ -11,7 +11,11 @@ const dbConfig = {
   port: parseInt(process.env.DB_PORT || '3307'),
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  typeCast: true,
+  multipleStatements: false,
+  supportBigNumbers: true,
+  bigNumberStrings: false
 };
 
 // Create connection pool

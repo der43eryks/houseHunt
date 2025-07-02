@@ -5,30 +5,23 @@ import { v4 as uuidv4 } from 'uuid';
 export class FeedbackModel {
   // Get all feedback with pagination
   static async getAll(page: number = 1, limit: number = 20): Promise<{ data: Feedback[], total: number, page: number, limit: number, totalPages: number }> {
-    const offset = (page - 1) * limit;
-
-    // Get total count
-    const countQuery = 'SELECT COUNT(*) as total FROM feedbacks';
+    const safeLimit = Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : 20;
+    const safePage = Number.isFinite(Number(page)) && Number(page) > 0 ? Number(page) : 1;
+    const offset = (safePage - 1) * safeLimit;
+    const query = 'SELECT * FROM feedback ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    // Log for debugging
+    console.log('[FeedbackModel.getAll] SQL:', query);
+    console.log('[FeedbackModel.getAll] Params:', [safeLimit, offset]);
+    const [rows] = await pool.execute(query, [safeLimit, offset]);
+    const countQuery = 'SELECT COUNT(*) as total FROM feedback';
     const [countResult] = await pool.execute(countQuery);
     const total = (countResult as any)[0].total;
-
-    // Get feedback with listing details
-    const query = `
-      SELECT f.*, l.title as house_title
-      FROM feedbacks f
-      LEFT JOIN listings l ON f.listing_id = l.id
-      ORDER BY f.created_at DESC
-      LIMIT ? OFFSET ?
-    `;
-    
-    const [rows] = await pool.execute(query, [limit, offset]);
-    
     return {
       data: rows as Feedback[],
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit)
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit)
     };
   }
 

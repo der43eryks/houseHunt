@@ -34,14 +34,16 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, onEdit, onDelete }) 
   ].filter(Boolean);
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 relative">
       <div className="relative">
         <img src={imageUrl} alt={listing.title} className="w-full h-56 object-cover"/>
-        <div className="absolute top-4 left-4">
-          <span className={`${listing.available ? 'bg-green-500' : 'bg-red-500'} text-white px-3 py-1 rounded-full text-xs font-semibold`}>
-            {listing.available ? 'Available' : 'Not Available'}
-          </span>
-        </div>
+        {/* Secure Area Badge */}
+        {listing.isSecureArea && (
+          <div className="absolute top-4 left-4 z-10 flex items-center gap-1 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg" aria-label="Secure Area">
+            <Shield className="w-4 h-4 mr-1" aria-hidden="true" />
+            Secure Area
+          </div>
+        )}
         <div className="absolute top-4 right-4">
           <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
             {listing.roomType}

@@ -378,9 +378,11 @@ const Register: React.FC = () => {
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm text-gray-700 mb-1">ID Number</label>
+            <label htmlFor="id" className="block text-sm text-gray-700 mb-1">ID Number</label>
             <input
               type="text"
+              id="id"
+              name="id"
               value={id}
               onChange={handleIdChange}
               placeholder="12345678"
@@ -401,9 +403,11 @@ const Register: React.FC = () => {
             )}
           </div>
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Full Name</label>
+            <label htmlFor="username" className="block text-sm text-gray-700 mb-1">Full Name</label>
             <input
               type="text"
+              id="username"
+              name="username"
               value={username}
               onChange={handleUsernameChange}
               placeholder="Ex. John Doe"
@@ -423,9 +427,11 @@ const Register: React.FC = () => {
             )}
           </div>
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Email</label>
+            <label htmlFor="email" className="block text-sm text-gray-700 mb-1">Email</label>
             <input
               type="email"
+              id="email"
+              name="email"
               value={email}
               onChange={handleEmailChange}
               placeholder="example@gmail.com"
@@ -445,9 +451,11 @@ const Register: React.FC = () => {
             )}
           </div>
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Phone</label>
+            <label htmlFor="phone" className="block text-sm text-gray-700 mb-1">Phone</label>
             <input
               type="tel"
+              id="phone"
+              name="phone"
               value={phone}
               onChange={handlePhoneChange}
               placeholder="+254712345678"
@@ -467,10 +475,12 @@ const Register: React.FC = () => {
             )}
           </div>
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Password</label>
+            <label htmlFor="password" className="block text-sm text-gray-700 mb-1">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
                 value={password}
                 onChange={handlePasswordChange}
                 placeholder="********"
@@ -486,6 +496,7 @@ const Register: React.FC = () => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                aria-label="Toggle password visibility"
               >
                 {showPassword ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -540,29 +551,32 @@ const Register: React.FC = () => {
             )}
           </div>
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="block text-sm text-gray-700 mb-1">Confirm Password</label>
             <div className="relative">
-            <input
+              <input
                 type={showConfirmPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={handleConfirmPasswordChange}
-              placeholder="********"
-              autoComplete="new-password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+                placeholder="********"
+                autoComplete="new-password"
                 className={`w-full px-4 py-3 pr-12 rounded-xl border focus:ring-2 focus:outline-none bg-gray-50 text-gray-900 transition-colors duration-200 ${
-                errors.confirmPassword 
-                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
-                    : confirmPassword && passwordsMatch === false
-                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                    : confirmPassword && passwordsMatch === true
-                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
-                  : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'
-              }`}
-              required
-            />
+                  errors.confirmPassword 
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                      : confirmPassword && passwordsMatch === false
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                      : confirmPassword && passwordsMatch === true
+                      ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+                required
+              />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                aria-label="Toggle confirm password visibility"
               >
                 {showConfirmPassword ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -594,14 +608,14 @@ const Register: React.FC = () => {
           <div className="flex items-center mb-2">
             <input
               id="terms"
+              name="terms"
               type="checkbox"
               checked={agree}
               onChange={handleAgreeChange}
               className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              required
             />
-            <label htmlFor="terms" className="ml-2 block text-xs text-gray-600">
-              Agree with <Link to="/terms" className="text-blue-700 hover:underline">Terms &amp; Condition</Link>
+            <label htmlFor="terms" className="ml-2 text-sm text-gray-700 select-none cursor-pointer">
+              I agree to the <a href="/terms" className="text-blue-600 hover:underline">Terms & Conditions</a>
             </label>
           </div>
           {errors.general && (

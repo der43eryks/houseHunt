@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -236,17 +236,20 @@ router.put('/change-password', authenticateToken, async (req: any, res: Response
 // Get all listings (admin view, can see all)
 router.get('/listings', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    // Robust parameter validation and sanitization
+    const page = Number.isFinite(Number(req.query.page)) && Number(req.query.page) > 0 ? Number(req.query.page) : 1;
+    const limit = Number.isFinite(Number(req.query.limit)) && Number(req.query.limit) > 0 ? Number(req.query.limit) : 10;
     const filters = {
-      roomType: req.query.roomType as string,
-      minPrice: req.query.minPrice ? parseInt(req.query.minPrice as string) : undefined,
-      maxPrice: req.query.maxPrice ? parseInt(req.query.maxPrice as string) : undefined,
-      paymentFrequency: req.query.paymentFrequency as string,
-      location: req.query.location as string,
-      isSecureArea: req.query.isSecureArea === 'true',
-      available: req.query.available === 'true',
-      search: req.query.search as string
+      roomType: typeof req.query.roomType === 'string' ? req.query.roomType : undefined,
+      minPrice: req.query.minPrice && !isNaN(Number(req.query.minPrice)) ? Number(req.query.minPrice) : undefined,
+      maxPrice: req.query.maxPrice && !isNaN(Number(req.query.maxPrice)) ? Number(req.query.maxPrice) : undefined,
+      paymentFrequency: typeof req.query.paymentFrequency === 'string' ? req.query.paymentFrequency : undefined,
+      location: typeof req.query.location === 'string' ? req.query.location : undefined,
+      isSecureArea: req.query.isSecureArea === 'true' ? true : req.query.isSecureArea === 'false' ? false : undefined,
+      available: req.query.available === 'true' ? true : req.query.available === 'false' ? false : undefined,
+      search: typeof req.query.search === 'string' ? req.query.search : undefined,
+      minRating: req.query.minRating && !isNaN(Number(req.query.minRating)) ? Number(req.query.minRating) : undefined,
+      createdAfter: typeof req.query.createdAfter === 'string' ? req.query.createdAfter : undefined
     };
 
     const result = await ListingModel.getAll(filters, page, limit);
@@ -393,10 +396,9 @@ router.patch('/listings/:id/availability', authenticateToken, async (req: Reques
 // Get all inquiries
 router.get('/inquiries', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    const page = Number.isFinite(Number(req.query.page)) && Number(req.query.page) > 0 ? Number(req.query.page) : 1;
+    const limit = Number.isFinite(Number(req.query.limit)) && Number(req.query.limit) > 0 ? Number(req.query.limit) : 20;
     const result = await InquiryModel.getAll(page, limit);
-    
     return res.json({
       success: true,
       data: result
@@ -473,10 +475,9 @@ router.put('/helpdesk', authenticateToken, validateRequest(helpDeskSchema), asyn
 // Get all feedbacks
 router.get('/feedbacks', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    const page = Number.isFinite(Number(req.query.page)) && Number(req.query.page) > 0 ? Number(req.query.page) : 1;
+    const limit = Number.isFinite(Number(req.query.limit)) && Number(req.query.limit) > 0 ? Number(req.query.limit) : 20;
     const result = await FeedbackModel.getAll(page, limit);
-    
     return res.json({
       success: true,
       data: result
