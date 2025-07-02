@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -9,13 +9,30 @@ import ForgotPassword from './pages/ForgotPassword';
 import Terms from './pages/Terms';
 import Dashboard from './pages/Dashboard';
 import { adminEventStream } from './services/streaming';
+import { adminAPI } from './services/api';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const location = useLocation();
-  const token = localStorage.getItem('adminToken');
-  if (!token) {
-    return <Navigate to="/" state={{ from: location }} replace />;
-  }
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    adminAPI.getProfile()
+      .then(res => {
+        if (isMounted && res.success) setIsAuthenticated(true);
+      })
+      .catch(() => {
+        if (isMounted) setIsAuthenticated(false);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => { isMounted = false; };
+  }, []);
+
+  if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (!isAuthenticated) return <Navigate to="/" state={{ from: location }} replace />;
   return children;
 }
 

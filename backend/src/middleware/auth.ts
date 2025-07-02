@@ -18,7 +18,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
   }
 
   try {
-    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    const secret = process.env.JWT_SECRET || '';
     const decoded = jwt.verify(token, secret) as any;
     
     const admin = await AdminModel.getById(decoded.adminId);
@@ -60,6 +60,6 @@ export const requireRole = (roles: string[]) => {
 };
 
 export const generateToken = (adminId: string): string => {
-  const secret = process.env.JWT_SECRET || 'your-secret-key';
+  const secret = process.env.JWT_SECRET || '';
   return jwt.sign({ adminId }, secret, { expiresIn: '24h' });
 }; 

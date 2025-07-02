@@ -8,9 +8,16 @@ const Verify: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
+  const [showRegistrationSuccess, setShowRegistrationSuccess] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const email = location.state?.email || 'example@gmail.com'; // Get email from navigation state
+
+  React.useEffect(() => {
+    if (location.state?.registered) {
+      setShowRegistrationSuccess(true);
+    }
+  }, [location.state]);
 
   const handleChange = (idx: number, value: string) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -85,6 +92,11 @@ const Verify: React.FC = () => {
             <span className="text-purple-700 font-semibold">{email}</span>
           </p>
         </div>
+        {showRegistrationSuccess && (
+          <div className="text-green-700 text-sm text-center bg-green-50 p-3 rounded-lg border border-green-200">
+            Registration successful! Please verify your email.
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex justify-between gap-2 mb-2">
             {code.map((digit, idx) => (

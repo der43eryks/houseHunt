@@ -10,3 +10,10 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+# HouseHunt Client
+
+## Authentication (Updated)
+
+- Authentication for admin and protected routes is now handled via secure, HttpOnly cookies, not localStorage.
+- If the client site uses authentication, it should use cookies and not store tokens in localStorage.

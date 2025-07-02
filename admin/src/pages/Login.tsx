@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthInput from '../components/AuthInput';
 import { adminAPI } from '../services/api';
 
@@ -15,6 +15,14 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const navigate = useNavigate();
+  const location = useLocation();
+  const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
+
+  React.useEffect(() => {
+    if (location.state?.verified) {
+      setShowVerificationSuccess(true);
+    }
+  }, [location.state]);
 
   // Validation functions
   const validateEmail = (email: string): string | null => {
@@ -75,7 +83,7 @@ const Login: React.FC = () => {
     try {
       const res = await adminAPI.login({ email, password });
       
-      if (res.success && res.data?.token) {
+      if (res.success && res.data?.admin) {
         navigate('/dashboard');
       } else {
         setErrors({ general: res.error || 'Login failed. Please check your credentials.' });
@@ -110,6 +118,11 @@ const Login: React.FC = () => {
           <h2 className="text-3xl font-bold text-blue-700">Sign In</h2>
           <p className="text-gray-500 mt-2">Hi! Welcome back, you've been missed</p>
         </div>
+        {showVerificationSuccess && (
+          <div className="text-green-700 text-sm text-center bg-green-50 p-3 rounded-lg border border-green-200 mb-4">
+            Verification successful! You can now log in.
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <AuthInput

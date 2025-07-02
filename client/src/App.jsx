@@ -6,7 +6,6 @@ import HomePage from './pages/HomePage';
 import ListingsPage from './pages/ListingsPage';
 import ListingDetailPage from './pages/ListingDetailPage';
 import HelpDeskPage from './pages/HelpDeskPage';
-import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AuthPage from './pages/AuthPage';
 import VerifyPage from './pages/VerifyPage';
@@ -44,7 +43,6 @@ function App() {
             <Route path="/listings" element={<ListingsPage />} />
             <Route path="/listings/:id" element={<ListingDetailPage />} />
             <Route path="/help" element={<HelpDeskPage />} />
-            <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/verify-email" element={<VerifyPage />} />

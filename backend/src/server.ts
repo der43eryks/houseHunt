@@ -7,9 +7,17 @@ import path from 'path';
 import adminEndpoints from './api/adminEndpoints';
 import clientEndpoints from './api/clientEndpoints';
 import { testConnection } from './config/database';
-import streamingEndpoints from './api/streamingEndpoints';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
+import streamingEndpoints from './api/streamingEndpoints';
+
+process.on('uncaughtException', (error) => {
+  console.error('🚨 Uncaught Exception:', error);
+  process.exit(1);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🚨 Unhandled Rejection:', reason);
+});
 
 // Load environment variables
 dotenv.config();

@@ -35,16 +35,46 @@ const upload = multer({
   }
 });
 
+// Add at the top of the file
+const loginAttempts: Record<string, { count: number, lastAttempt: number, lockUntil?: number }> = {};
+const MAX_ATTEMPTS = 5;
+const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
+
 // Admin authentication (login)
 router.post('/login', validateRequest(adminLoginSchema), async (req: Request, res: Response) => {
+  const identifier = req.body.email || req.body.id;
+  const now = Date.now();
+  const attempt = loginAttempts[identifier] || { count: 0, lastAttempt: 0 };
+
+  // Check if locked out
+  if (attempt.lockUntil && now < attempt.lockUntil) {
+    const waitMinutes = Math.ceil((attempt.lockUntil - now) / 60000);
+    return res.status(429).json({
+      success: false,
+      error: `Too many failed login attempts. Please try again after ${waitMinutes} minute(s).`
+    });
+  }
+
   try {
     const admin = await AdminModel.verifyLogin(req.body);
     if (!admin) {
+      // Increment failed attempts
+      attempt.count += 1;
+      attempt.lastAttempt = now;
+      if (attempt.count >= MAX_ATTEMPTS) {
+        attempt.lockUntil = now + LOCK_TIME;
+      }
+      loginAttempts[identifier] = attempt;
       return res.status(401).json({ 
         success: false, 
-        error: 'Invalid credentials' 
+        error: attempt.count >= MAX_ATTEMPTS
+          ? `Too many failed login attempts. Please try again after ${Math.ceil(LOCK_TIME / 60000)} minutes.`
+          : 'Invalid credentials' 
       });
     }
+
+    // Reset on successful login
+    delete loginAttempts[identifier];
 
     const token = generateToken(admin.id);
     const { passwordHash, ...adminWithoutPassword } = admin;
@@ -64,6 +94,7 @@ router.post('/login', validateRequest(adminLoginSchema), async (req: Request, re
       }
     });
   } catch (error) {
+    console.error('Server error in POST /login:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Login failed' 
@@ -109,6 +140,7 @@ router.post('/register', validateRequest(adminRegistrationSchema), async (req: R
       message: 'Admin registered successfully'
     });
   } catch (error) {
+    console.error('Server error in POST /register:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Registration failed' 
@@ -125,6 +157,7 @@ router.get('/profile', authenticateToken, async (req: any, res: Response) => {
       data: adminWithoutPassword
     });
   } catch (error) {
+    console.error('Server error in GET /profile:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to get profile' 
@@ -149,6 +182,7 @@ router.put('/profile', authenticateToken, async (req: any, res: Response) => {
       data: adminWithoutPassword
     });
   } catch (error) {
+    console.error('Server error in PUT /profile:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to update profile' 
@@ -191,6 +225,7 @@ router.put('/change-password', authenticateToken, async (req: any, res: Response
       message: 'Password changed successfully'
     });
   } catch (error) {
+    console.error('Server error in PUT /change-password:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to change password' 
@@ -220,6 +255,7 @@ router.get('/listings', authenticateToken, async (req: Request, res: Response) =
       data: result
     });
   } catch (error) {
+    console.error('Server error in GET /listings:', error);
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch listings' 
@@ -243,6 +279,7 @@ router.post('/listings', authenticateToken, upload.array('images', 5), async (re
       data: listing
     });
   } catch (error) {
+    console.error('Server error in POST /listings:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to create listing' 
@@ -266,6 +303,7 @@ router.put('/listings/:id', authenticateToken, validateRequest(listingSchema), a
       data: listing
     });
   } catch (error) {
+    console.error('Server error in PUT /listings/:id:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to update listing' 
@@ -289,6 +327,7 @@ router.delete('/listings/:id', authenticateToken, async (req: Request, res: Resp
       message: 'Listing deleted successfully'
     });
   } catch (error) {
+    console.error('Server error in DELETE /listings/:id:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to delete listing' 
@@ -317,6 +356,7 @@ router.post('/listings/:id/images', authenticateToken, upload.array('images', 5)
       data: { imageUrls }
     });
   } catch (error) {
+    console.error('Server error in POST /listings/:id/images:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to upload images' 
@@ -342,6 +382,7 @@ router.patch('/listings/:id/availability', authenticateToken, async (req: Reques
       message: `Listing marked as ${available ? 'available' : 'unavailable'}`
     });
   } catch (error) {
+    console.error('Server error in PATCH /listings/:id/availability:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to update availability' 
@@ -361,6 +402,7 @@ router.get('/inquiries', authenticateToken, async (req: Request, res: Response) 
       data: result
     });
   } catch (error) {
+    console.error('Server error in GET /inquiries:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch inquiries' 
@@ -386,6 +428,7 @@ router.post('/inquiries/:id/respond', authenticateToken, async (req: Request, re
       message: 'Inquiry status updated successfully'
     });
   } catch (error) {
+    console.error('Server error in POST /inquiries/:id/respond:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to update inquiry status' 
@@ -402,6 +445,7 @@ router.get('/helpdesk', authenticateToken, async (req: Request, res: Response) =
       data: helpDesk
     });
   } catch (error) {
+    console.error('Server error in GET /helpdesk:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch help desk info' 
@@ -418,6 +462,7 @@ router.put('/helpdesk', authenticateToken, validateRequest(helpDeskSchema), asyn
       data: helpDesk
     });
   } catch (error) {
+    console.error('Server error in PUT /helpdesk:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to update help desk info' 
@@ -437,6 +482,7 @@ router.get('/feedbacks', authenticateToken, async (req: Request, res: Response) 
       data: result
     });
   } catch (error) {
+    console.error('Server error in GET /feedbacks:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch feedbacks' 
@@ -469,6 +515,7 @@ router.get('/stats', authenticateToken, async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
+    console.error('Server error in GET /stats:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch stats' 

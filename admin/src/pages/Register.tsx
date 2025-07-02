@@ -283,8 +283,8 @@ const Register: React.FC = () => {
       });
 
       if (response.success) {
-        // Navigate to verify page with email
-        navigate('/verify', { state: { email: email.trim() } });
+        // Navigate to verify page with email and registered flag
+        navigate('/verify', { state: { email: email.trim(), registered: true } });
       } else {
         setErrors({ general: response.message || 'Registration failed' });
       }

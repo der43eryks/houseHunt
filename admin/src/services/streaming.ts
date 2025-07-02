@@ -5,11 +5,12 @@ class AdminEventStream {
   private reconnectDelay = 1000;
   private listeners = new Map<string, Function[]>();
 
-  connect(token: string) {
+  connect() {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4002/api';
-      this.eventSource = new EventSource(`${API_BASE_URL}/stream/admin/stream?token=${encodeURIComponent(token)}`);
-      
+      const API_BASE_URL = 'http://localhost:4002/api';
+      // No token, rely on cookies for authentication
+      this.eventSource = new EventSource(`${API_BASE_URL}/stream/admin/stream`, { withCredentials: true });
+
       this.eventSource.onopen = () => {
         console.log('Admin SSE connection established');
         this.reconnectAttempts = 0;
@@ -94,13 +95,10 @@ class AdminEventStream {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-      
+
       setTimeout(() => {
         this.disconnect();
-        const token = localStorage.getItem('adminToken');
-        if (token) {
-          this.connect(token);
-        }
+        this.connect();
       }, this.reconnectDelay * this.reconnectAttempts);
     } else {
       console.error('Max reconnection attempts reached');

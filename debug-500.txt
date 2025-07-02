@@ -1,0 +1,18 @@
+TRY AND FIX THE 500 ERROR IN THE HOUSEHUNT PROJECT
+1.	Reverse proxy issues/Load balancer issues
+The app never receives the requests, Apache or Nginx, Cloud-Flare or load balancer throws the 500 error before reaching your server.
+2.	Database connection issues – database timeouts, connection pool exhaustion or authentication failures that your app doesn’t catch properly
+3.	Missing global error handler – unhandled promise rejections or exceptions that crash before your logging kicks in.
+4.	Memory or resource exhaustion-server runs out of memory, file descriptors or CPU-OS
+Kills the process before it can log anything – check system resources htop df -h unimit -n //fuile system descriptor limit //node js memory monitoring process.memoryUsage () //{res : 2457600, heapTotal :8192000, heapUsed : 5242880}
+5.	Middleware Authentication/CORs Issues – the auth middleware files silently or CORS preflight requests get blocked. ” // Add logging to each middleware app.use((req, res, next) => { console.log(`${req.method} ${req.url}`); next(); }); // CORS debugging app.use(cors({ origin: true, credentials: true, optionsSuccessStatus: 200 }));”
+6.	Debug strategy add step by step debugging checklist- add console.log at the very start of your route handler
+7.	Check if your server process is actually receiving the request
+8.	Look at reverse proxy logs
+9.	Add global error handlers for uncaught exceptions 
+10.	Wrap all async operations in try catch blocks 
+11.	Check database connection and query logs 
+12.	Monitor server resources (memory, CPU and file descriptions)
+13.	Test with a simple hello world endpoint
+14.	TRY WITH THIS SIMPLE NODE JS DEBUGG TEMPLATE 
+// server.js - Complete debugging setup const express = require('express'); const app = express(); // 🚨 Add these FIRST for debugging app.use((req, res, next) => { console.log(`🔍 ${new Date().toISOString()} - ${req.method} ${req.url}`); console.log('Headers:', req.headers); next(); }); // Global error handlers process.on('uncaughtException', (error) => { console.error('🚨 Uncaught Exception:', error); process.exit(1); }); process.on('unhandledRejection', (reason, promise) => { console.error('🚨 Unhandled Rejection:', reason); }); app.use(express.json()); // Test endpoint app.get('/api/test', (req, res) => { console.log('✅ Test endpoint reached'); res.json({ message: 'Server is working' }); }); // Your listings endpoint with full error handling app.post('/api/listings', async (req, res) => { console.log('📝 Listings endpoint reached'); console.log('Body:', req.body); try { // Simulate your database call console.log('💾 About to save to database...'); // Your actual database code here const result = await saveListingToDatabase(req.body); console.log('✅ Database save successful'); res.json({ success: true, data: result }); } catch (error) { // 🚨 CRITICAL: Always log the full error console.error('❌ Error in listings endpoint:', error); console.error('Stack trace:', error.stack); res.status(500).json({ error: 'Failed to save listing', // Only in development: details: process.env.NODE_ENV === 'development' ? error.message : undefined }); } }); // Global error middleware (MUST be last) app.use((error, req, res, next) => { console.error('🚨 Global error handler caught:', error); res.status(500).json({ error: 'Something went wrong!' }); }); const PORT = process.env.PORT || 3000; app.listen(PORT, () => { console.log(`🚀 Server running on port ${PORT}`); });

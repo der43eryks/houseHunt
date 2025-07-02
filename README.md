@@ -190,7 +190,8 @@ npm run dev
 - `GET /stats` - Get platform statistics
 
 ### Admin API (`/api/admin`)
-- `POST /login` - Admin authentication
+- `POST /login` - Admin authentication (sets HttpOnly cookie)
+- `POST /logout` - Admin logout (clears cookie)
 - `GET /profile` - Get admin profile
 - `PUT /profile` - Update admin profile
 - `PUT /change-password` - Change password
@@ -205,22 +206,13 @@ npm run dev
 - `GET /feedbacks` - Get all feedback
 - `GET /stats` - Get dashboard statistics
 
-## 🔐 Authentication
+## 🔒 Authentication (Updated)
 
-### Admin Login
-- **Default Credentials**: 
-  - Username: `admin`
-  - Password: `admin123`
-- **JWT Tokens**: 24-hour expiration
-- **Protected Routes**: All admin endpoints require authentication
-
-### Security Features
-- Password hashing with bcrypt
-- JWT token authentication
-- Rate limiting (100 requests per 15 minutes)
-- CORS protection
-- Helmet security headers
-- Input validation with Joi
+- **Admin authentication now uses secure, HttpOnly cookies for session management.**
+- JWT tokens are set as cookies by the backend on login and are not stored in localStorage or sent in Authorization headers.
+- All authenticated API requests (admin dashboard) rely on cookies for authentication. The frontend must use `withCredentials: true` (axios) or `credentials: 'include'` (fetch) for all requests.
+- Logging out clears the authentication cookie via the `/api/admin/logout` endpoint.
+- This approach improves security by protecting tokens from XSS attacks and ensures tokens are sent automatically with each request.
 
 ## 📱 Features by Page
 
