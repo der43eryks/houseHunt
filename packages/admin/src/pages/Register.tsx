@@ -1,17 +1,40 @@
-import React from 'react';
+import * as React from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { adminAPI } from '../services/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { AdminRegisterSchema, AdminRegisterInput } from '../../../shared/types/validationSchemas';
+import { debounce } from '../utils/debounce';
+
+const FORM_STORAGE_KEY = 'admin-register-form';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit, watch, setError, formState: { errors, isSubmitting } } = useForm<AdminRegisterInput>({
+  const { register, handleSubmit, watch, setError, reset, formState: { errors, isSubmitting } } = useForm<AdminRegisterInput>({
     resolver: zodResolver(AdminRegisterSchema),
     mode: 'onChange',
-    defaultValues: { id: '', username: '', email: '', phone: '', password: '', confirmPassword: '', agree: false },
+    defaultValues: { id: '', username: '', email: '', phone: '', password: '', confirmPassword: '', agree: true },
   });
+
+  // Persist form state to localStorage
+  useEffect(() => {
+    const subscription = watch((value) => {
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(value));
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
+  // Load form state from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(FORM_STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        reset({ ...parsed, agree: !!parsed.agree });
+      } catch {}
+    }
+  }, [reset]);
 
   // Password strength logic
   const password = watch('password');
@@ -31,17 +54,48 @@ const Register: React.FC = () => {
   };
   const passwordStrength = checkPasswordStrength(password || '');
 
+  const [emailStatus, setEmailStatus] = useState<'idle'|'checking'|'exists'|'ok'>('idle');
+  const [idStatus, setIdStatus] = useState<'idle'|'checking'|'exists'|'ok'>('idle');
+
+  const checkEmail = useCallback(debounce(async (value: string) => {
+    setEmailStatus('checking');
+    const exists = await adminAPI.checkEmailExists(value);
+    setEmailStatus(exists ? 'exists' : 'ok');
+  }, 500), []);
+
+  const checkId = useCallback(debounce(async (value: string) => {
+    setIdStatus('checking');
+    const exists = await adminAPI.checkIdExists(value);
+    setIdStatus(exists ? 'exists' : 'ok');
+  }, 500), []);
+
   const onSubmit = async (data: AdminRegisterInput) => {
     try {
-      const { confirmPassword, agree, ...payload } = data;
-      const response = await adminAPI.register(payload);
-      if (response.success) {
+      const { confirmPassword, ...payload } = data;
+      // Prepend +254 if not present
+      if (!payload.phone.startsWith('+254')) {
+        payload.phone = '+254' + payload.phone;
+      }
+      const response = await adminAPI.register(payload as { id: string; username: string; email: string; phone: string; password: string; });
+      if (response.data?.success) {
+        localStorage.removeItem(FORM_STORAGE_KEY); // Clear on success
         navigate('/verify', { state: { email: data.email, registered: true } });
       } else {
-        setError('root', { message: response.error || response.message || 'Registration failed' });
+        // If backend returns an error mentioning 'agree', set as field error
+        const errorMessage = response.data?.error || response.data?.message || '';
+        if (errorMessage.toLowerCase().includes('agree')) {
+          setError('agree', { message: errorMessage });
+        } else {
+          setError('root', { message: errorMessage || 'Registration failed' });
+        }
       }
     } catch (error: any) {
-      setError('root', { message: error?.error || error?.message || 'Registration failed. Please try again.' });
+      const errMsg = error?.error || error?.message || '';
+      if (errMsg.toLowerCase().includes('agree')) {
+        setError('agree', { message: errMsg });
+      } else {
+        setError('root', { message: errMsg || 'Registration failed. Please try again.' });
+      }
     }
   };
 
@@ -60,10 +114,22 @@ const Register: React.FC = () => {
               id="id"
               maxLength={8}
               autoComplete="off"
-              {...register('id')}
+              {...register('id', {
+                onChange: (e) => {
+                  checkId(e.target.value);
+                }
+              })}
+              onKeyPress={e => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:outline-none bg-gray-50 text-gray-900 transition-colors duration-200 ${errors.id ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
               required
             />
+            {idStatus === 'checking' && <span>Checking...</span>}
+            {idStatus === 'exists' && <span style={{color: 'red'}}>ID already registered</span>}
+            {!errors.id && watch('id') && idStatus === 'ok' && <span style={{color: 'green'}}>ID available</span>}
             {errors.id && <p className="mt-1 text-sm text-red-600 flex items-center"><span className="mr-1">⚠</span>{errors.id.message}</p>}
           </div>
           <div>
@@ -72,6 +138,11 @@ const Register: React.FC = () => {
               type="text"
               id="username"
               autoComplete="name"
+              onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (!/[a-zA-Z_\s]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               {...register('username')}
               className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:outline-none bg-gray-50 text-gray-900 transition-colors duration-200 ${errors.username ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
               required
@@ -84,23 +155,41 @@ const Register: React.FC = () => {
               type="email"
               id="email"
               autoComplete="email"
-              {...register('email')}
+              {...register('email', {
+                onChange: (e) => {
+                  checkEmail(e.target.value);
+                }
+              })}
               className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:outline-none bg-gray-50 text-gray-900 transition-colors duration-200 ${errors.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
               required
             />
+            {emailStatus === 'checking' && <span>Checking...</span>}
+            {emailStatus === 'exists' && <span style={{color: 'red'}}>Email already registered</span>}
+            {!errors.email && watch('email') && emailStatus === 'ok' && <span style={{color: 'green'}}>Email available</span>}
             {errors.email && <p className="mt-1 text-sm text-red-600 flex items-center"><span className="mr-1">⚠</span>{errors.email.message}</p>}
           </div>
           <div>
             <label htmlFor="phone" className="block text-sm text-gray-700 mb-1">Phone</label>
-            <input
-              type="tel"
-              id="phone"
-              autoComplete="tel"
-              placeholder="+254712345678"
-              {...register('phone')}
-              className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:outline-none bg-gray-50 text-gray-900 transition-colors duration-200 ${errors.phone ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
-              required
-            />
+            <div className="flex">
+              <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-gray-200 bg-gray-100 text-gray-600 text-sm select-none">+254</span>
+              <input
+                type="tel"
+                id="phone"
+                autoComplete="tel"
+                placeholder="712345678 or 123456789"
+                {...register('phone', {
+                  setValueAs: (v) => v.replace(/^0+/, ''),
+                  validate: (v) => v.length === 9 && /^[17]\d{8}$/.test(v) || 'Enter a valid 9-digit Kenyan number starting with 1 or 7 (e.g. 712345678 or 123456789)'
+                })}
+                onKeyPress={e => {
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                className={`w-full px-4 py-3 rounded-r-xl border border-gray-200 focus:ring-2 focus:outline-none bg-gray-50 text-gray-900 transition-colors duration-200 ${errors.phone ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'focus:ring-blue-500 focus:border-blue-500'}`}
+                required
+              />
+            </div>
             {errors.phone && <p className="mt-1 text-sm text-red-600 flex items-center"><span className="mr-1">⚠</span>{errors.phone.message}</p>}
           </div>
           <div>
@@ -182,19 +271,27 @@ const Register: React.FC = () => {
             )}
             {errors.confirmPassword && <p className="mt-1 text-sm text-red-600 flex items-center"><span className="mr-1">⚠</span>{errors.confirmPassword.message}</p>}
           </div>
-          <div className="flex items-center mb-2">
+          <div className="flex items-center gap-2">
             <input
-              id="terms"
               type="checkbox"
-              {...register('agree')}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              id="agree"
+              {...register('agree', { required: 'You must agree to the terms and conditions' })}
+              className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
             />
-            <label htmlFor="terms" className="ml-2 text-sm text-gray-700 select-none cursor-pointer">
-              I agree to the <a href="/terms" className="text-blue-600 hover:underline">Terms & Conditions</a>
+            <label htmlFor="agree" className="text-sm text-gray-700 select-none">
+              I agree to the <Link to="/terms" className="text-blue-600 hover:underline">Terms & Conditions</Link>
             </label>
           </div>
-          {errors.agree && <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg border border-red-200">{errors.agree.message}</div>}
-          {errors.root && <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg border border-red-200">{errors.root.message}</div>}
+          {errors.agree && (
+            <div className="mt-2 p-3 bg-red-100 border border-red-300 text-red-600 rounded-xl text-sm">
+              {errors.agree.message || 'You must agree to the terms and conditions'}
+            </div>
+          )}
+          {errors.root && (
+            <div className="mt-2 p-3 bg-red-100 border border-red-300 text-red-600 rounded-xl text-sm">
+              {errors.root.message}
+            </div>
+          )}
           <button
             type="submit"
             className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"

@@ -9,6 +9,7 @@ import { validateRequestZod, listingSchema, adminLoginSchema, adminRegistrationS
 const multer = require('multer');
 const path = require('path');
 import { sseManager } from '../middleware/sse';
+import { logger } from '../logger';
 
 const router = Router();
 
@@ -42,20 +43,20 @@ const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
 
 // Admin authentication (login)
 router.post('/login', validateRequestZod(adminLoginSchema), async (req: Request, res: Response) => {
-  const identifier = req.body.email || req.body.id;
-  const now = Date.now();
-  const attempt = loginAttempts[identifier] || { count: 0, lastAttempt: 0 };
-
-  // Check if locked out
-  if (attempt.lockUntil && now < attempt.lockUntil) {
-    const waitMinutes = Math.ceil((attempt.lockUntil - now) / 60000);
-    return res.status(429).json({
-      success: false,
-      error: `Too many failed login attempts. Please try again after ${waitMinutes} minute(s).`
-    });
-  }
-
   try {
+    const identifier = req.body.email || req.body.id;
+    const now = Date.now();
+    const attempt = loginAttempts[identifier] || { count: 0, lastAttempt: 0 };
+
+    // Check if locked out
+    if (attempt.lockUntil && now < attempt.lockUntil) {
+      const waitMinutes = Math.ceil((attempt.lockUntil - now) / 60000);
+      return res.status(429).json({
+        success: false,
+        error: `Too many failed login attempts. Please try again after ${waitMinutes} minute(s).`
+      });
+    }
+
     const admin = await AdminModel.verifyLogin(req.body);
     if (!admin) {
       // Increment failed attempts
@@ -65,6 +66,12 @@ router.post('/login', validateRequestZod(adminLoginSchema), async (req: Request,
         attempt.lockUntil = now + LOCK_TIME;
       }
       loginAttempts[identifier] = attempt;
+      logger.warn('Security Event', {
+        event: 'login_failed',
+        userId: req.body?.email || req.body?.id,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
       return res.status(401).json({ 
         success: false, 
         error: attempt.count >= MAX_ATTEMPTS
@@ -108,6 +115,12 @@ router.post('/register', validateRequestZod(adminRegistrationSchema), async (req
     // Check if admin with this email already exists
     const existingAdmin = await AdminModel.getByEmail(req.body.email);
     if (existingAdmin) {
+      logger.warn('Security Event', {
+        event: 'registration_failed',
+        userId: req.body?.email || req.body?.id,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
       return res.status(400).json({ 
         success: false, 
         error: 'Admin with this email already exists' 
@@ -149,97 +162,80 @@ router.post('/register', validateRequestZod(adminRegistrationSchema), async (req
 });
 
 // Get admin profile
-router.get('/profile', authenticateToken, async (req: any, res: Response) => {
+router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    const { passwordHash, ...adminWithoutPassword } = req.admin;
+    const { passwordHash, ...adminWithoutPassword } = (req as any).admin;
     return res.json({
       success: true,
       data: adminWithoutPassword
     });
   } catch (error) {
-    console.error('Server error in GET /profile:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Failed to get profile' 
-    });
+    console.error('Error in /profile:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
 // Update admin profile
-router.put('/profile', authenticateToken, async (req: any, res: Response) => {
+router.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const admin = await AdminModel.updateProfile(req.admin.id, req.body);
+    const admin = await AdminModel.updateProfile((req as any).admin.id, req.body);
     if (!admin) {
       return res.status(404).json({ 
         success: false, 
         error: 'Admin not found' 
       });
     }
-
     const { passwordHash, ...adminWithoutPassword } = admin;
     return res.json({
       success: true,
       data: adminWithoutPassword
     });
   } catch (error) {
-    console.error('Server error in PUT /profile:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Failed to update profile' 
-    });
+    console.error('Error in PUT /profile:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
 // Change password
-router.put('/change-password', authenticateToken, async (req: any, res: Response) => {
+router.put('/change-password', authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    
-    // Verify current password
-    const admin = await AdminModel.getById(req.admin.id);
-    if (!admin) {
+    const adminRecord = await AdminModel.getById((req as any).admin.id);
+    if (!adminRecord) {
       return res.status(404).json({ 
         success: false, 
         error: 'Admin not found' 
       });
     }
-
-    const isValidPassword = await require('bcryptjs').compare(currentPassword, admin.passwordHash);
+    const isValidPassword = await require('bcryptjs').compare(currentPassword, adminRecord.passwordHash);
     if (!isValidPassword) {
       return res.status(400).json({ 
         success: false, 
         error: 'Current password is incorrect' 
       });
     }
-
-    const success = await AdminModel.changePassword(req.admin.id, newPassword);
+    const success = await AdminModel.changePassword((req as any).admin.id, newPassword);
     if (!success) {
       return res.status(500).json({ 
         success: false, 
         error: 'Failed to change password' 
       });
     }
-
     return res.json({
       success: true,
       message: 'Password changed successfully'
     });
   } catch (error) {
-    console.error('Server error in PUT /change-password:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Failed to change password' 
-    });
+    console.error('Error in PUT /change-password:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
 // Get all listings (admin view, can see all)
-router.get('/listings', authenticateToken, async (req: Request, res: Response) => {
+router.get('/listings', authenticateToken, async (req, res) => {
   try {
-    // Robust parameter validation and sanitization
     const page = Number.isFinite(Number(req.query.page)) && Number(req.query.page) > 0 ? Number(req.query.page) : 1;
     const limit = Number.isFinite(Number(req.query.limit)) && Number(req.query.limit) > 0 ? Number(req.query.limit) : 10;
-    // Set today's date as default for createdAfter
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -257,7 +253,6 @@ router.get('/listings', authenticateToken, async (req: Request, res: Response) =
       minRating: req.query.minRating && !isNaN(Number(req.query.minRating)) ? Number(req.query.minRating) : 0,
       createdAfter: typeof req.query.createdAfter === 'string' ? req.query.createdAfter : todayStr
     };
-
     const result = await ListingModel.getAll(filters, page, limit);
     res.json({
       success: true,
@@ -273,9 +268,8 @@ router.get('/listings', authenticateToken, async (req: Request, res: Response) =
 });
 
 // Create a new listing
-router.post('/listings', authenticateToken, upload.array('images', 5), async (req: any, res: Response) => {
+router.post('/listings', authenticateToken, upload.array('images', 5), async (req, res) => {
   try {
-    // Ensure all booleans are 0/1 and all fields have defaults
     const body = {
       ...req.body,
       stayTwoPeople: req.body.stayTwoPeople === 'true' ? 1 : 0,
@@ -294,13 +288,10 @@ router.post('/listings', authenticateToken, upload.array('images', 5), async (re
       agentFacebook: req.body.agentFacebook || ''
     };
     const listing = await ListingModel.create(body);
-    
-    // Send notification to all clients about new listing
     sseManager.sendToAll('client', {
       type: 'new_listing',
       data: listing
     });
-    
     return res.status(201).json({
       success: true,
       data: listing
@@ -315,9 +306,8 @@ router.post('/listings', authenticateToken, upload.array('images', 5), async (re
 });
 
 // Update a listing
-router.put('/listings/:id', authenticateToken, validateRequestZod(listingSchema), async (req: Request, res: Response) => {
+router.put('/listings/:id', authenticateToken, validateRequestZod(listingSchema), async (req, res) => {
   try {
-    // Ensure all booleans are 0/1 and all fields have defaults
     const body = {
       ...req.body,
       stayTwoPeople: req.body.stayTwoPeople === 'true' ? 1 : 0,
@@ -356,7 +346,7 @@ router.put('/listings/:id', authenticateToken, validateRequestZod(listingSchema)
 });
 
 // Delete a listing
-router.delete('/listings/:id', authenticateToken, async (req: Request, res: Response) => {
+router.delete('/listings/:id', authenticateToken, async (req, res) => {
   try {
     const success = await ListingModel.delete(req.params.id);
     if (!success) {
@@ -380,7 +370,7 @@ router.delete('/listings/:id', authenticateToken, async (req: Request, res: Resp
 });
 
 // Upload images for a listing
-router.post('/listings/:id/images', authenticateToken, upload.array('images', 5), async (req: Request, res: Response) => {
+router.post('/listings/:id/images', authenticateToken, upload.array('images', 5), async (req, res) => {
   try {
     if (!(req as any).files || (req as any).files.length === 0) {
       return res.status(400).json({ 
@@ -409,7 +399,7 @@ router.post('/listings/:id/images', authenticateToken, upload.array('images', 5)
 });
 
 // Mark listing as available/unavailable
-router.patch('/listings/:id/availability', authenticateToken, async (req: Request, res: Response) => {
+router.patch('/listings/:id/availability', authenticateToken, async (req, res) => {
   try {
     // Ensure available is always a boolean and convert to 0/1 for MySQL
     const available = req.body.available === true || req.body.available === 'true';
@@ -434,7 +424,7 @@ router.patch('/listings/:id/availability', authenticateToken, async (req: Reques
 });
 
 // Get all inquiries
-router.get('/inquiries', authenticateToken, async (req: Request, res: Response) => {
+router.get('/inquiries', authenticateToken, async (req, res) => {
   try {
     const page = Number.isFinite(Number(req.query.page)) && Number(req.query.page) > 0 ? Number(req.query.page) : 1;
     const limit = Number.isFinite(Number(req.query.limit)) && Number(req.query.limit) > 0 ? Number(req.query.limit) : 20;
@@ -453,18 +443,16 @@ router.get('/inquiries', authenticateToken, async (req: Request, res: Response) 
 });
 
 // Respond to an inquiry
-router.post('/inquiries/:id/respond', authenticateToken, async (req: Request, res: Response) => {
+router.post('/inquiries/:id/respond', authenticateToken, async (req, res) => {
   try {
     const { status } = req.body;
     const success = await InquiryModel.updateStatus(req.params.id, status);
-    
     if (!success) {
       return res.status(404).json({ 
         success: false, 
         error: 'Inquiry not found' 
       });
     }
-
     return res.json({
       success: true,
       message: 'Inquiry status updated successfully'
@@ -479,7 +467,7 @@ router.post('/inquiries/:id/respond', authenticateToken, async (req: Request, re
 });
 
 // Get help desk info
-router.get('/helpdesk', authenticateToken, async (req: Request, res: Response) => {
+router.get('/helpdesk', authenticateToken, async (req, res) => {
   try {
     const helpDesk = await HelpDeskModel.get();
     return res.json({
@@ -496,7 +484,7 @@ router.get('/helpdesk', authenticateToken, async (req: Request, res: Response) =
 });
 
 // Update help desk info
-router.put('/helpdesk', authenticateToken, validateRequestZod(helpDeskSchema), async (req: Request, res: Response) => {
+router.put('/helpdesk', authenticateToken, validateRequestZod(helpDeskSchema), async (req, res) => {
   try {
     const helpDesk = await HelpDeskModel.update(req.body);
     return res.json({
@@ -513,7 +501,7 @@ router.put('/helpdesk', authenticateToken, validateRequestZod(helpDeskSchema), a
 });
 
 // Get all feedbacks
-router.get('/feedbacks', authenticateToken, async (req: Request, res: Response) => {
+router.get('/feedbacks', authenticateToken, async (req, res) => {
   try {
     const page = Number.isFinite(Number(req.query.page)) && Number(req.query.page) > 0 ? Number(req.query.page) : 1;
     const limit = Number.isFinite(Number(req.query.limit)) && Number(req.query.limit) > 0 ? Number(req.query.limit) : 20;
@@ -532,7 +520,7 @@ router.get('/feedbacks', authenticateToken, async (req: Request, res: Response) 
 });
 
 // Get dashboard stats
-router.get('/stats', authenticateToken, async (req: Request, res: Response) => {
+router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const [listings, inquiries, feedbacks] = await Promise.all([
       ListingModel.getAll({}, 1, 1000),
@@ -572,6 +560,30 @@ router.post('/logout', (req: Request, res: Response) => {
     sameSite: 'lax'
   });
   return res.json({ success: true, message: 'Logged out' });
+});
+
+router.get('/check-email', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ exists: false });
+    const exists = !!(await AdminModel.getByEmail(email as string));
+    return res.json({ exists });
+  } catch (error) {
+    console.error('Error in /check-email:', error);
+    return res.status(500).json({ exists: false, error: 'Internal server error' });
+  }
+});
+
+router.get('/check-id', async (req, res) => {
+  try {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ exists: false });
+    const exists = !!(await AdminModel.getById(id as string));
+    return res.json({ exists });
+  } catch (error) {
+    console.error('Error in /check-id:', error);
+    return res.status(500).json({ exists: false, error: 'Internal server error' });
+  }
 });
 
 export default router; 

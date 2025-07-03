@@ -35,7 +35,7 @@ export const LoginSchema = z.object({
 export const InquirySchema = z.object({
   houseId: z.string().min(1),
   name: z.string().min(2).max(100),
-  phone: z.string().regex(/^\+254\d{9}$/, 'Phone number must be in Kenyan format: +254XXXXXXXXX'),
+  phone: z.string().regex(/^\+254[17]\d{8}$/, 'Phone number must be in Kenyan format: +254 followed by 9 digits starting with 1 or 7'),
   message: z.string().min(10),
   preferredVisitTime: z.string().optional(),
 });
@@ -52,7 +52,7 @@ export const FeedbackSchema = z.object({
 // HelpDesk Schema
 export const HelpDeskSchema = z.object({
   name: z.string().min(2),
-  phone: z.string().regex(/^\+254\d{9}$/, 'Phone number must be in Kenyan format: +254XXXXXXXXX'),
+  phone: z.string().regex(/^\+254[17]\d{8}$/, 'Phone number must be in Kenyan format: +254 followed by 9 digits starting with 1 or 7'),
   whatsappLink: z.string().url(),
   email: z.string().email(),
   facebook: z.string().url(),
@@ -65,7 +65,8 @@ export const AdminRegisterSchema = z.object({
   id: z.string().regex(/^[0-9]{8}$/, 'ID must be exactly 8 digits').refine((val: string) => !val.startsWith('00'), { message: 'ID cannot start with 00' }),
   username: z.string().min(2, 'Full name must be at least 2 characters').max(50, 'Full name must be less than 50 characters').regex(/^[a-zA-Z0-9_\s]+$/, 'Full name can only contain letters, numbers, spaces, and underscores'),
   email: z.string().email(),
-  phone: z.string().regex(/^\+254\d{9}$/, 'Phone number must be in Kenyan format: +254XXXXXXXXX'),
+  // Accept only 9 digits starting with 1 or 7 for Kenyan phone numbers (frontend)
+  phone: z.string().regex(/^[17]\d{8}$/, 'Phone number must be 9 digits, starting with 1 or 7 (e.g. 712345678 or 123456789)'),
   password: z.string().min(8, 'Password must be at least 8 characters').max(16, 'Password must be less than 16 characters'),
   confirmPassword: z.string().min(8).max(16),
   agree: z.literal(true, { errorMap: () => ({ message: 'You must agree to the terms and conditions' }) })

@@ -94,7 +94,7 @@ const EditListingForm: React.FC = () => {
 
         <FormSection title="Agent Contact Information">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <AuthInput label="Agent Phone*" type="text" placeholder="e.g. +254712345678" />
+            <AuthInput label="Agent Phone*" type="text" placeholder="e.g. +254712345678 or +254123456789" />
             <AuthInput label="Agent Email*" type="email" placeholder="e.g. info@enigmatic.com" />
           </div>
         </FormSection>

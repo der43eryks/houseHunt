@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 const jwt = require('jsonwebtoken');
 import { AdminModel } from '../models/AdminModel';
+import { logger } from '../logger';
 
 interface AuthRequest extends Request {
   admin?: any;
@@ -32,6 +33,12 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     req.admin = admin;
     return next();
   } catch (error) {
+    logger.warn('Security Event', {
+      event: 'login_failed',
+      userId: req.body?.email || req.body?.id,
+      ip: req.ip,
+      timestamp: new Date().toISOString()
+    });
     return res.status(403).json({ 
       success: false, 
       error: 'Invalid or expired token' 

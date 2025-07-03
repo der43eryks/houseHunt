@@ -22,7 +22,7 @@ export interface Listing {
 }
 export interface Admin {
     id: string;
-    name: string;
+    username: string;
     passwordHash: string;
     email: string;
     phone: string;
@@ -88,6 +88,8 @@ export interface ListingFilters {
     isSecureArea?: boolean;
     available?: boolean;
     search?: string;
+    minRating?: number;
+    createdAfter?: string;
 }
 export interface CreateListingRequest {
     title: string;
@@ -99,15 +101,18 @@ export interface CreateListingRequest {
     locationText: string;
     areaNickname?: string;
     tags: string[];
+    images?: string[];
     amenities: string[];
     isSecureArea: boolean;
     agentPhone: string;
     agentWhatsApp?: string;
     agentFacebook?: string;
     available: boolean;
+    status?: 'published' | 'draft' | 'booked' | 'archived';
 }
 export interface UpdateListingRequest extends Partial<CreateListingRequest> {
     id: string;
+    status?: 'published' | 'draft' | 'booked' | 'archived';
 }
 export interface CreateInquiryRequest {
     houseId: string;

@@ -13,5 +13,8 @@
     "packages/admin",
     "packages/client",
     "packages/shared"
-  ]
+  ],
+  "dependencies": {
+    "winston": "^3.17.0"
+  }
 }

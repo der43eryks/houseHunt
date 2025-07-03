@@ -5,10 +5,11 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "../dist/shared",
+    "outDir": "./dist",
     "rootDir": "./",
     "esModuleInterop": true,
-    "strict": true
+    "strict": true,
+    "composite": true
   },
   "include": [
     "types/**/*"

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { z, ZodSchema } from 'zod';
 // @ts-ignore: monorepo import may fail in some tools, but works at runtime
-import { ListingSchema, RegisterSchema, LoginSchema, InquirySchema, FeedbackSchema, HelpDeskSchema, AdminRegisterSchema } from '../../shared/types/validationSchemas';
+import { ListingSchema, RegisterSchema, LoginSchema, InquirySchema, FeedbackSchema, HelpDeskSchema, AdminRegisterSchema } from '../../../shared/dist/types/validationSchemas';
 
 export const validateRequestZod = (schema: ZodSchema<any>) => {
   return (req: Request, res: Response, next: NextFunction) => {

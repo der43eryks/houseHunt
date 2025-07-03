@@ -90,6 +90,16 @@ export const adminAPI = {
       throw error;
     }
   },
+  async checkEmailExists(email: string) {
+    const res = await fetch(`/api/admin/check-email?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    return data.exists;
+  },
+  async checkIdExists(id: string) {
+    const res = await fetch(`/api/admin/check-id?id=${encodeURIComponent(id)}`);
+    const data = await res.json();
+    return data.exists;
+  },
 };
 
 export default api; 
