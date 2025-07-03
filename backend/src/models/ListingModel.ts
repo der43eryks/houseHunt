@@ -1,6 +1,7 @@
 import pool from '../config/database';
 import { Listing, CreateListingRequest, UpdateListingRequest, ListingFilters, PaginatedResponse } from '../../../shared/types/db_types';
 import { v4 as uuidv4 } from 'uuid';
+import { isValid, parse, format } from 'date-fns';
 
 export class ListingModel {
   // Get all listings with filters and pagination
@@ -59,7 +60,20 @@ export class ListingModel {
     }
 
     if (filters.createdAfter) {
-      const ts = filters.createdAfter.length === 10 ? `${filters.createdAfter} 00:00:00` : filters.createdAfter;
+      // Strict validation for MySQL date format
+      const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+      const datetimePattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+      let ts = filters.createdAfter;
+      if (datePattern.test(ts)) {
+        ts = `${ts} 00:00:00`;
+      } else if (!datetimePattern.test(ts)) {
+        throw new Error("Invalid 'createdAfter' date format. Use 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS'.");
+      }
+      // Optionally, check if it's a valid date
+      const parsed = parse(ts, 'yyyy-MM-dd HH:mm:ss', new Date());
+      if (!isValid(parsed)) {
+        throw new Error("'createdAfter' is not a valid date.");
+      }
       whereClause += ' AND created_at >= ?';
       params.push(ts);
     }
