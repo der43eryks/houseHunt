@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import Login from './pages/Login';
@@ -10,6 +10,9 @@ import Terms from './pages/Terms';
 import Dashboard from './pages/Dashboard';
 import { adminEventStream } from './services/streaming';
 import { adminAPI } from './services/api';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const location = useLocation();
@@ -36,31 +39,42 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   return children;
 }
 
+function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
+
+const router = createBrowserRouter([
+  { path: '/', element: <Layout><Login /></Layout> },
+  { path: '/register', element: <Layout><Register /></Layout> },
+  { path: '/forgot-password', element: <Layout><ForgotPassword /></Layout> },
+  { path: '/terms', element: <Layout><Terms /></Layout> },
+  { path: '/verify', element: <Layout><Verify /></Layout> },
+  { path: '/dashboard', element: <Layout><RequireAuth><Dashboard /></RequireAuth></Layout> },
+  { path: '/dashboard/listings', element: <Layout><RequireAuth><Dashboard /></RequireAuth></Layout> },
+  { path: '/dashboard/add-listing', element: <Layout><RequireAuth><Dashboard /></RequireAuth></Layout> },
+  { path: '/dashboard/profile', element: <Layout><RequireAuth><Dashboard /></RequireAuth></Layout> },
+  { path: '/dashboard/settings', element: <Layout><RequireAuth><Dashboard /></RequireAuth></Layout> },
+], {
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+  }
+});
+
 function App() {
   useEffect(() => {
     // Remove all code that gets adminToken from localStorage for authentication
   }, []);
 
-  return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/verify" element={<Verify />} />
-            <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-            <Route path="/dashboard/listings" element={<RequireAuth><Dashboard /></RequireAuth>} />
-            <Route path="/dashboard/add-listing" element={<RequireAuth><Dashboard /></RequireAuth>} />
-            <Route path="/dashboard/profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
-            <Route path="/dashboard/settings" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          </Routes>
-        </Router>
-      </LanguageProvider>
-    </ThemeProvider>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;

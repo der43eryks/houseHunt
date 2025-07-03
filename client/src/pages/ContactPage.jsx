@@ -3,6 +3,7 @@ import { useQuery, useMutation } from 'react-query';
 import { Phone, Mail, MessageCircle, MapPin, Clock, Send, Facebook, Instagram, Twitter } from 'lucide-react';
 import { clientAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 
 const ContactPage = () => {
   const [contactForm, setContactForm] = useState({
@@ -231,7 +232,7 @@ const ContactPage = () => {
               
               <div className="flex space-x-4">
                 <a
-                  href={helpDesk?.facebook || '#'}
+                  href={helpDesk?.facebook || 'https://facebook.com'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors"
@@ -239,13 +240,17 @@ const ContactPage = () => {
                   <Facebook className="h-6 w-6" />
                 </a>
                 <a
-                  href="#"
+                  href={helpDesk?.instagram || 'https://instagram.com'}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="bg-pink-600 text-white p-3 rounded-lg hover:bg-pink-700 transition-colors"
                 >
                   <Instagram className="h-6 w-6" />
                 </a>
                 <a
-                  href="#"
+                  href={helpDesk?.twitter || 'https://twitter.com'}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="bg-blue-400 text-white p-3 rounded-lg hover:bg-blue-500 transition-colors"
                 >
                   <Twitter className="h-6 w-6" />
@@ -263,10 +268,11 @@ const ContactPage = () => {
               <form onSubmit={handleContactSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="contact-name" className="block text-sm font-medium text-gray-700 mb-1">
                       Name *
                     </label>
                     <input
+                      id="contact-name"
                       type="text"
                       required
                       value={contactForm.name}
@@ -275,10 +281,11 @@ const ContactPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="contact-email" className="block text-sm font-medium text-gray-700 mb-1">
                       Email *
                     </label>
                     <input
+                      id="contact-email"
                       type="email"
                       required
                       value={contactForm.email}
@@ -289,10 +296,11 @@ const ContactPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="contact-phone" className="block text-sm font-medium text-gray-700 mb-1">
                     Phone Number
                   </label>
                   <input
+                    id="contact-phone"
                     type="tel"
                     value={contactForm.phone}
                     onChange={(e) => setContactForm(prev => ({ ...prev, phone: e.target.value }))}
@@ -301,10 +309,11 @@ const ContactPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="contact-subject" className="block text-sm font-medium text-gray-700 mb-1">
                     Subject *
                   </label>
                   <input
+                    id="contact-subject"
                     type="text"
                     required
                     value={contactForm.subject}
@@ -314,10 +323,11 @@ const ContactPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="contact-message" className="block text-sm font-medium text-gray-700 mb-1">
                     Message *
                   </label>
                   <textarea
+                    id="contact-message"
                     required
                     rows="4"
                     value={contactForm.message}
@@ -347,10 +357,11 @@ const ContactPage = () => {
               <form onSubmit={handleFeedbackSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="feedback-name" className="block text-sm font-medium text-gray-700 mb-1">
                       Name *
                     </label>
                     <input
+                      id="feedback-name"
                       type="text"
                       required
                       value={feedbackForm.name}
@@ -359,10 +370,11 @@ const ContactPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="feedback-email" className="block text-sm font-medium text-gray-700 mb-1">
                       Email *
                     </label>
                     <input
+                      id="feedback-email"
                       type="email"
                       required
                       value={feedbackForm.email}
@@ -403,10 +415,11 @@ const ContactPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="feedback-message" className="block text-sm font-medium text-gray-700 mb-1">
                     Feedback *
                   </label>
                   <textarea
+                    id="feedback-message"
                     required
                     rows="3"
                     value={feedbackForm.message}

@@ -107,29 +107,29 @@ const HomePage = () => {
       {/* Search/Filter Bar */}
       <form onSubmit={handleSearch} className="flex flex-col md:flex-row items-start md:items-end gap-4 bg-[#112240] p-4 md:p-6 rounded-xl shadow-md w-full max-w-5xl mx-auto transition-all duration-500 mt-[-60px]">
         <div className="flex flex-col w-full md:w-1/4">
-          <label className="text-white font-semibold mb-1">Area</label>
-          <select name="area" value={filters.area} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500 transition-all duration-500">
+          <label htmlFor="area-select" className="text-white font-semibold mb-1">Area</label>
+          <select id="area-select" name="area" value={filters.area} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500 transition-all duration-500">
             <option value="">All Areas</option>
             {areaOptions.map(area => <option key={area} value={area}>{area}</option>)}
           </select>
         </div>
         <div className="flex flex-col w-full md:w-1/4">
-          <label className="text-white font-semibold mb-1">Price</label>
-          <select name="price" value={filters.price} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500 transition-all duration-500">
+          <label htmlFor="price-select" className="text-white font-semibold mb-1">Price</label>
+          <select id="price-select" name="price" value={filters.price} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500 transition-all duration-500">
             <option value="">All Prices</option>
             {priceOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
           </select>
         </div>
         <div className="flex flex-col w-full md:w-1/4">
-          <label className="text-white font-semibold mb-1">Room Type</label>
-          <select name="type" value={filters.type} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500 transition-all duration-500">
+          <label htmlFor="type-select" className="text-white font-semibold mb-1">Room Type</label>
+          <select id="type-select" name="type" value={filters.type} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500 transition-all duration-500">
             {roomTypeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
         </div>
         <div className="flex flex-col w-full md:w-1/4">
-          <label className="text-white font-semibold mb-1">Search</label>
+          <label htmlFor="search-input" className="text-white font-semibold mb-1">Search</label>
           <div className="flex items-center">
-            <input type="text" name="search" placeholder="Search listings..." value={filters.search} onChange={handleInputChange} className="rounded-l-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500 w-full transition-all duration-500" />
+            <input id="search-input" type="text" name="search" placeholder="Search listings..." value={filters.search} onChange={handleInputChange} className="rounded-l-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500 w-full transition-all duration-500" />
             <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-lg transition-all duration-500 flex items-center justify-center">
               <Search className="h-5 w-5" />
             </button>

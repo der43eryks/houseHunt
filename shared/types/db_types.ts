@@ -90,6 +90,11 @@ export interface PaginatedResponse<T> {
 }
 
 // Filter Types
+/**
+ * Filters for querying listings.
+ *
+ * @property createdAfter - Only return listings created after this date. Format: 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS' (MySQL standard).
+ */
 export interface ListingFilters {
   roomType?: string;
   minPrice?: number;
@@ -101,7 +106,11 @@ export interface ListingFilters {
   available?: boolean;
   search?: string;
   minRating?: number;
-  createdAfter?: string; // ISO date string
+  /**
+   * Only return listings created after this date.
+   * Format: 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS' (MySQL standard).
+   */
+  createdAfter?: string;
 }
 
 // Form Types

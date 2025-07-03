@@ -94,44 +94,46 @@ const ListingsPage = () => {
       <div className="w-full py-12 px-0">
         <form onSubmit={handleSearch} className="flex flex-col md:flex-row items-start md:items-end gap-4 bg-[#112240] p-6 rounded-xl shadow-md mb-8 w-full mx-0">
           <div className="flex flex-col w-full md:w-1/4">
-            <label className="text-white font-semibold mb-1">Area</label>
-            <select name="area" value={filters.area} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500">
+            <label htmlFor="area-select" className="text-white font-semibold mb-1">Area</label>
+            <select id="area-select" name="area" value={filters.area} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500">
               <option value="">All Areas</option>
               {areaOptions.map(area => <option key={area} value={area}>{area}</option>)}
             </select>
           </div>
           <div className="flex flex-col w-full md:w-1/4">
-            <label className="text-white font-semibold mb-1">Price</label>
-            <select name="price" value={filters.price} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500">
+            <label htmlFor="price-select" className="text-white font-semibold mb-1">Price</label>
+            <select id="price-select" name="price" value={filters.price} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500">
               <option value="">All Prices</option>
               {priceOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
           </select>
         </div>
           <div className="flex flex-col w-full md:w-1/4">
-            <label className="text-white font-semibold mb-1">Room Type</label>
-            <select name="type" value={filters.type} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500">
+            <label htmlFor="type-select" className="text-white font-semibold mb-1">Room Type</label>
+            <select id="type-select" name="type" value={filters.type} onChange={handleInputChange} className="rounded-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500">
               {roomTypeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
           </select>
         </div>
           <div className="flex flex-col w-full md:w-1/4">
-            <label className="text-white font-semibold mb-1">Search</label>
+            <label htmlFor="search-input" className="text-white font-semibold mb-1">Search</label>
         <div className="flex items-center">
                 <input
+                  id="search-input"
                   type="text"
-                name="search"
+                  name="search"
                   placeholder="Search listings..."
                   value={filters.search}
-                onChange={handleInputChange}
-                className="rounded-l-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500 w-full"
-              />
+                  onChange={handleInputChange}
+                  className="rounded-l-lg p-2 bg-[#0D1B2A] text-white border border-blue-600 focus:ring-2 focus:ring-blue-500 w-full"
+                />
               <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-lg transition-colors duration-300 flex items-center justify-center">
                 <Search className="h-5 w-5" />
               </button>
             </div>
           </div>
           <div className="flex flex-col w-full md:w-1/4">
-            <label className="text-white font-semibold mb-1 flex items-center gap-2">
+            <label htmlFor="secure-area-checkbox" className="text-white font-semibold mb-1 flex items-center gap-2">
               <input
+                id="secure-area-checkbox"
                 type="checkbox"
                 checked={isSecureArea === true}
                 onChange={e => setIsSecureArea(e.target.checked ? true : undefined)}
@@ -141,8 +143,9 @@ const ListingsPage = () => {
             </label>
           </div>
           <div className="flex flex-col w-full md:w-1/4">
-            <label className="text-white font-semibold mb-1">Min Rating</label>
+            <label htmlFor="min-rating-input" className="text-white font-semibold mb-1">Min Rating</label>
             <input
+              id="min-rating-input"
               type="number"
               min={1}
               max={5}
@@ -152,8 +155,9 @@ const ListingsPage = () => {
             />
           </div>
           <div className="flex flex-col w-full md:w-1/4">
-            <label className="text-white font-semibold mb-1">Created After</label>
+            <label htmlFor="created-after-input" className="text-white font-semibold mb-1">Created After</label>
             <input
+              id="created-after-input"
               type="date"
               value={createdAfter ?? ''}
               onChange={e => setCreatedAfter(e.target.value || undefined)}

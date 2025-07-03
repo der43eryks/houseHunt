@@ -1,0 +1,10 @@
+{
+  "name": "househunt-monorepo",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix client\" \"npm run dev --prefix admin\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
