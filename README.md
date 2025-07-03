@@ -360,3 +360,146 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 **Built with ❤️ for students finding their perfect home!**
+
+# HouseHunt Monorepo
+
+This project is structured as a monorepo using **npm workspaces**. It contains:
+
+- `packages/backend` — Node.js/Express backend (has its own dependencies)
+- `packages/admin` — Admin React app (shares dependencies with client)
+- `packages/client` — Client React app (shares dependencies with admin)
+- `packages/shared` — Shared types, schemas, and utilities (no dependencies)
+
+## File & Folder Structure
+
+```
+/packages
+  /backend
+    /src
+      /api
+        - adminEndpoints.ts
+        - clientEndpoints.ts
+        - streamingEndpoints.ts
+      /models
+        - AdminModel.ts
+        - ListingModel.ts
+        - FeedbackModel.ts
+        - InquiryModel.ts
+        - HelpDeskModel.ts
+      /middleware
+        - validation.ts
+        - auth.ts
+        - sse.ts
+      /config
+        - database.ts
+      /controllers
+        - index.ts
+      /routes
+        - index.ts
+      /services
+        - index.ts
+      /utils
+        - index.ts
+      - server.ts
+    - package.json
+    ...
+  /admin
+    /src
+      /pages
+        - Register.tsx
+        - Login.tsx
+        - Verify.tsx
+        - Terms.tsx
+        - ForgotPassword.tsx
+        - Dashboard.tsx
+      /components
+      /context
+      /services
+      /utils
+      /assets
+      - App.tsx
+      - main.tsx
+      - index.css
+    - package.json
+    ...
+  /client
+    /src
+      /pages
+        - ContactPage.jsx
+        - HomePage.jsx
+        - ListingsPage.jsx
+        - AboutPage.jsx
+        - AuthPage.jsx
+        - VerifyPage.jsx
+        - HelpDeskPage.jsx
+        - ListingDetailPage.jsx
+      /components
+      /services
+      /data
+      /styles
+      /assets
+      - App.jsx
+      - main.jsx
+      - index.css
+      - App.css
+    - package.json
+    ...
+  /shared
+    /types
+      - validationSchemas.ts
+      - db_types.ts
+    /utils
+      - index.ts
+    - tsconfig.json
+    ...
+```
+
+## Dependency Management
+- **Backend**: Has its own `node_modules` and `package.json`. Install backend-only dependencies here.
+- **Admin & Client**: Share dependencies (like React, Zod, etc.) via the root. Install shared dependencies at the root.
+- **Shared**: Contains only code (types, schemas, utils). No dependencies.
+
+## Getting Started
+
+1. **Install dependencies (from the root):**
+   ```sh
+   npm install
+   ```
+   This will install all dependencies for all packages using workspaces.
+
+2. **Build shared code (if needed):**
+   ```sh
+   cd packages/shared
+   npm run build # if you have a build script
+   ```
+
+3. **Run the backend:**
+   ```sh
+   cd packages/backend
+   npm start # or npm run dev
+   ```
+
+4. **Run the admin app:**
+   ```sh
+   cd packages/admin
+   npm start # or npm run dev
+   ```
+
+5. **Run the client app:**
+   ```sh
+   cd packages/client
+   npm start # or npm run dev
+   ```
+
+## Notes
+- Use relative imports for shared code, e.g.:
+  ```js
+  import { MyType } from 'shared/types/db_types';
+  ```
+- Update your `tsconfig.json` paths if needed for TypeScript support across packages.
+- Each package can have its own `README.md` for more details.
+- Placeholder `index.ts` files exist in empty folders to ensure structure and easy expansion.
+
+---
+
+For more on npm workspaces: https://docs.npmjs.com/cli/v7/using-npm/workspaces

@@ -5,6 +5,13 @@
     "dev": "concurrently \"npm run dev --prefix client\" \"npm run dev --prefix admin\""
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
-  }
+    "concurrently": "^8.2.2",
+    "typescript": "^5.8.3"
+  },
+  "workspaces": [
+    "packages/backend",
+    "packages/admin",
+    "packages/client",
+    "packages/shared"
+  ]
 }
